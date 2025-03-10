@@ -11,7 +11,7 @@ services:
       - static_volume:/Mardex/staticfiles
       - media_volume:/Mardex/mediafiles
     ports:
-      - "8020:8000"
+      - "8021:8000"
     depends_on:
       - mardex_db
       - redis
