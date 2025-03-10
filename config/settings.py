@@ -14,10 +14,8 @@ from datetime import timedelta
 from pathlib import Path
 from django.utils.translation import gettext_lazy as _
 
-
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
@@ -30,7 +28,6 @@ DEBUG = True
 
 ALLOWED_HOSTS = ['*']
 
-
 # Application definition
 
 INSTALLED_APPS = [
@@ -42,15 +39,13 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
-
-    #kutubxonalar
+    # kutubxonalar
     "channels",
     'modeltranslation',
     'rest_framework',
     'rest_framework_simplejwt',
     'drf_yasg',
     'corsheaders',
-
 
     'client.apps.ClientConfig',
     'worker.apps.WorkerConfig',
@@ -63,7 +58,6 @@ REST_FRAMEWORK = {
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
 }
-
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -99,17 +93,26 @@ TEMPLATES = [
 # WSGI_APPLICATION = 'config.wsgi.application'
 ASGI_APPLICATION = 'config.asgi.application'
 
-
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.sqlite3',
+#         'NAME': BASE_DIR / 'db.sqlite3',
+#     }
+# }
+
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'mardex',  # PostgreSQL bazasi nomi
+        'USER': 'user_mardex',  # PostgreSQL foydalanuvchi nomi
+        'PASSWORD': 'password_mardex',  # PostgreSQL paroli
+        'HOST': 'mardex_db',  # Docker Compose'dagi konteyner nomi
+        'PORT': '5432',  # PostgreSQL uchun standart port
     }
 }
-
 
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
@@ -129,7 +132,6 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
 # Internationalization
 # https://docs.djangoproject.com/en/5.1/topics/i18n/
 
@@ -146,7 +148,6 @@ TIME_ZONE = 'Asia/Tashkent'
 USE_I18N = True
 
 USE_TZ = True
-
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
@@ -165,14 +166,12 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # settings.py
 AUTH_USER_MODEL = 'users.AbstractUser'
 
-
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(days=365 * 100),  # 100 yil amal qiladi
     'REFRESH_TOKEN_LIFETIME': timedelta(days=365 * 100),  # Refresh token ham 100 yil amal qiladi
     'ROTATE_REFRESH_TOKENS': False,
     'BLACKLIST_AFTER_ROTATION': False,
 }
-
 
 FILE_UPLOAD_MAX_MEMORY_SIZE = 52428800  # 50 MB (baytlarda)
 DATA_UPLOAD_MAX_MEMORY_SIZE = 52428800  # 50 MB
@@ -181,7 +180,7 @@ CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "channels_redis.core.RedisChannelLayer",
         "CONFIG": {
-            "hosts": [("127.0.0.1", 6379)],  # Redis server ishlayotgan manzil va port
+            "hosts": [("redis", 6379)],  # Redis server ishlayotgan manzil va port
         },
     },
 }
