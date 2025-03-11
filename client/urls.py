@@ -39,7 +39,7 @@ urlpatterns = [
     path('clients/', ClientListView.as_view(), name='client-list'),
 
     path('filtered-workers/<int:order_id>/', FilteredWorkerListView.as_view(), name='filtered-workers'),
-    path('sent_order/<int:order_id>/', SendOrderToSelectedWorkersView.as_view(), name='sent-order'),
+    path('sent_order/', SendOrderToSelectedWorkersView.as_view(), name='sent-order'),
 
 ]
 if settings.DEBUG:
