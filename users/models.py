@@ -44,8 +44,6 @@ class UserManager(BaseUserManager):
 
 class AbstractUser(AbstractBaseUser, PermissionsMixin):
     ROLE_CHOICES = [
-        ('Bosh buxgalter', 'Bosh buxgalter'),
-        ('buxgalter', 'buxgalter'),
         ('client', 'client'),
         ('worker', 'worker'),
     ]
@@ -54,10 +52,10 @@ class AbstractUser(AbstractBaseUser, PermissionsMixin):
         ('Male', 'Erkak'),
         ('Female', 'Ayol'),
     ]
-    role = models.CharField(max_length=50, choices=ROLE_CHOICES)
-    gender = models.CharField(max_length=10, choices=GENDER_CHOICES)
+    role = models.CharField(max_length=50, choices=ROLE_CHOICES, )
+    gender = models.CharField(max_length=10, choices=GENDER_CHOICES, default='Male')
 
-    full_name = models.CharField(max_length=255, blank=True, null=True)
+    full_name = models.CharField(max_length=255)
     phone = models.CharField(max_length=15, unique=True, blank=True, null=True)
     region = models.ForeignKey(Region, on_delete=models.SET_NULL, blank=True, null=True)
     city = models.ForeignKey(City, on_delete=models.SET_NULL, blank=True, null=True)
