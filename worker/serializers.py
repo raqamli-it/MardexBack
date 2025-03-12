@@ -84,11 +84,11 @@ class WorkerImageSerializer(serializers.ModelSerializer):
 
 
 class WorkerSerializer(serializers.ModelSerializer):
-    images = WorkerImageSerializer(many=True, read_only=True)
+    images = WorkerImageSerializer(source='profileimage', many=True, read_only=True)
 
     class Meta:
-        model = User
-        fields = ['id', 'full_name', 'description', 'avatar', 'role', 'reyting', 'images', 'job_category', 'job_id']
+        model = AbstractUser
+        fields = ['id', 'full_name', 'avatar', 'job_id', 'description', 'reyting', 'images',]
 
 
 class WorkerUpdateSerializer(serializers.ModelSerializer):
