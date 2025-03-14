@@ -3,6 +3,7 @@ from rest_framework.response import Response
 from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
 from client.models import Order
+from client.serializer import OrderSerializer
 from job.views import get_filtered_workers
 
 
@@ -26,15 +27,7 @@ class SendOrderToSelectedWorkersView(APIView):
                     f"worker_{worker.id}",
                     {
                         "type": "send_order_notification",
-                        "order_id": order.id,
-                        "job_category": order.job_category.id if order.job_category else None,
-                        "job_id": list(order.job_id.values_list("id", flat=True)),
-                        "desc": order.desc,
-                        "price": order.price,
-                        "region": order.region.id if order.region else None,
-                        "city": order.city.id if order.city else None,
-                        "client": str(order.client) if order.client else None,
-                        "created_at": order.created_at.strftime('%Y-%m-%d %H:%M:%S'),
+                        "order": OrderSerializer(order).data
                     }
                 )
 

@@ -4,8 +4,6 @@ from .sent_order import SendOrderToSelectedWorkersView
 from .views import ClientDetailView, ClientNewsDetailView, OrderCreateView, FilteredWorkerListView
 
 from .views import (
-    OrderListView,
-    OrderDetailView,
     newsclient_list,
     TarifHaridiCreateView,
     clienttarif_list,
@@ -21,8 +19,6 @@ from .views import ClientRegistrationView, ClientLoginView, ClientPasswordChange
 
 urlpatterns = [
     path('orderscreate/', OrderCreateView.as_view(), name='order-create'),
-    path('orders/', OrderListView.as_view(), name='order-list'),
-    path('orders/<int:pk>/', OrderDetailView.as_view(), name='order-detail'),
     path('clientnews/', newsclient_list),
     path('register/', ClientRegistrationView.as_view(), name='client-register'),
     path('login/', ClientLoginView.as_view(), name='client-login'),

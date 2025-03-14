@@ -1,11 +1,11 @@
 from job.views import get_filtered_workers
 from users.models import AbstractUser
+from worker.models import WorkerImage
 from worker.serializers import WorkerSerializer
 from .models import Order, ClientNews, ClientTarif, TarifHaridi
 from .serializer import (
-    OrderSerializer, ClientNewsSerializer, ClientDetailSerializer, ClientTarifSerializer,
-    TarifHaridiSerializer, ClientRegistrationSerializer, ClientLoginSerializer,
-    ClientPasswordChangeSerializer, ClientPhoneUpdateSerializer
+    OrderSerializer, ClientNewsSerializer, ClientTarifSerializer,
+    TarifHaridiSerializer, ClientPhoneUpdateSerializer
 )
 from django.shortcuts import get_object_or_404
 from rest_framework import generics, status
@@ -20,26 +20,46 @@ from .serializer import (ClientRegistrationSerializer, ClientLoginSerializer, Cl
 from django.contrib.auth import get_user_model
 from job.models import Job, CategoryJob
 from job.serializer import CategoryJobSerializer, JobSerializer
-
 User = get_user_model()
 
 ### Order Views
+
 
 class OrderCreateView(generics.CreateAPIView):
     queryset = Order.objects.all()
     serializer_class = OrderSerializer
     permission_classes = [IsAuthenticated]
 
+    def perform_create(self, serializer):
+        """Order yaratish va filterlangan workerlarni qaytarish"""
+        self.order = serializer.save(client=self.request.user)  # Orderni yaratish
+        self.eligible_workers = get_filtered_workers(self.order)  # Filterlangan workerlarni olish
 
+    def create(self, request, *args, **kwargs):
+        """Overriding to return custom response"""
+        response = super().create(request, *args, **kwargs)
 
-class OrderListView(generics.ListAPIView):
-    queryset = Order.objects.all()
-    serializer_class = OrderSerializer
+        workers_data = [
+            {
+                "id": w.id,
+                "full_name": w.full_name,
+                "avatar": w.avatar.url if w.avatar else None,
+                "job_id": list(w.job_id.values_list("id", flat=True)),
+                "description": w.description,
+                "reyting": w.reyting,
+                "images": [
+                    {"id": img.id, "image": img.image.url if img.image else None}
+                    for img in WorkerImage.objects.filter(user=w)  # WorkerImage dan olish
+                ]
+            }
+            for w in self.eligible_workers
+        ]
 
-
-class OrderDetailView(generics.RetrieveAPIView):
-    queryset = Order.objects.all()
-    serializer_class = OrderSerializer
+        return Response({
+            "detail": "Order muvaffaqiyatli yaratildi!",
+            "order": OrderSerializer(self.order).data,  # Order ma’lumotlari
+            "eligible_workers": workers_data  # Filterlangan workerlar ro‘yxati
+        })
 
 
 ### Job Views
