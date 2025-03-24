@@ -3,14 +3,14 @@ from django.shortcuts import get_object_or_404
 from rest_framework import generics, status
 from rest_framework.generics import UpdateAPIView, RetrieveAPIView
 from rest_framework.parsers import MultiPartParser
-from rest_framework.permissions import AllowAny, IsAuthenticated  # Foydalanuvchi autentifikatsiyasi
+from rest_framework.permissions import AllowAny, IsAuthenticated, BasePermission  # Foydalanuvchi autentifikatsiyasi
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.db.models import Q
 
 from client.models import Order
 from job.models import Job, CategoryJob
 from job.serializer import JobSerializer, CategoryJobSerializer
-from .models import WorkerNews, WorkerImage
+from .models import WorkerNews
 from .serializers import WorkerRegistrationSerializer, WorkerLoginSerializer, \
     WorkerPasswordChangeSerializer, UserUpdateSerializer, \
     WorkerImageSerializer, WorkerJobSerializer, WorkerPhoneUpdateSerializer, WorkerNewsSerializer, \
@@ -24,7 +24,7 @@ from .serializers import CitySerializer, RegionSerializer
 
 User = get_user_model()
 
-# registratsiya qismi class
+
 class WorkerRegistrationView(generics.CreateAPIView):
     queryset = User.objects.all()
     serializer_class = WorkerRegistrationSerializer
@@ -43,7 +43,6 @@ class WorkerRegistrationView(generics.CreateAPIView):
         }, status=status.HTTP_201_CREATED)
 
 
-# login class
 class WorkerLoginView(generics.GenericAPIView):
     serializer_class = WorkerLoginSerializer
     permission_classes = [AllowAny]
@@ -53,7 +52,11 @@ class WorkerLoginView(generics.GenericAPIView):
         serializer.is_valid(raise_exception=True)
         worker = serializer.validated_data
 
+        if worker.role != 'worker':
+            return Response({"error": "Only workers can login here."}, status=status.HTTP_403_FORBIDDEN)
+
         refresh = RefreshToken.for_user(worker)
+        refresh['role'] = worker.role
 
         return Response({
             "refresh": str(refresh),
@@ -62,10 +65,18 @@ class WorkerLoginView(generics.GenericAPIView):
         }, status=status.HTTP_200_OK)
 
 
-# parol change class
+class IsWorker(BasePermission):
+    def has_permission(self, request, view):
+        # Tokendagi rolni tekshirish
+        token = request.auth
+        if token:
+            return token.get('role') == 'worker'
+        return False
+
+
 class WorkerPasswordChangeView(generics.GenericAPIView):
     serializer_class = WorkerPasswordChangeSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated,  IsWorker]
 
     def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)

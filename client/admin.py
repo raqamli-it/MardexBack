@@ -4,10 +4,15 @@ from .models import Order, ClientNews, ClientTarif
 
 @admin.register(Order)
 class OrderAdmin(admin.ModelAdmin):
-    list_display = ('id', 'client', 'gender', 'status', 'created_at')
-    list_filter = ['gender', 'status', 'created_at']
-    fields = ['id', 'job_category', 'job_id', 'desc', 'price', 'full_desc', 'city', 'region', 'gender', 'view_count', 'image']
-    ordering = ('created_at',)
+    list_display = ('id', 'client', 'worker', 'status', 'created_at', 'client_is_finished', 'get_finished_workers',)
+    list_filter = ('status', 'job_category', 'created_at',)
+    search_fields = ('client__username', 'worker__username', 'job_category__title')
+    ordering = ('-created_at',)
+
+    def get_finished_workers(self, obj):
+        return obj.get_finished_workers()
+
+    get_finished_workers.short_description = "Finished Workers"
 
 
 @admin.register(ClientNews)

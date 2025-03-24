@@ -15,13 +15,17 @@ class Order(models.Model):
     STATUS_CHOICES = [
         ('stable', 'Stable'),
         ('success', 'Success'),
+        ('in_progress', 'In_progress'),
         ('cancel_client', 'Cancel by Client'),
-        ('cancel_user', 'Cancel by User'),
+        ('cancel_worker', 'Cancel by Worker'),
     ]
 
     worker = models.ForeignKey(AbstractUser, on_delete=models.SET_NULL, blank=True, null=True,
                                related_name='orders_as_worker')
     accepted_workers = models.ManyToManyField(AbstractUser, related_name='accepted_orders', blank=True)
+    rejected_workers = models.ManyToManyField(AbstractUser, related_name='rejected_workers', blank=True)
+    notified_workers = models.ManyToManyField(AbstractUser, related_name='notified_orders', blank=True)
+    finished_workers = models.ManyToManyField(User, related_name="finished_orders", blank=True)
     client = models.ForeignKey(AbstractUser, on_delete=models.SET_NULL, blank=True, null=True, related_name='client')
     job_category = models.ForeignKey(CategoryJob, on_delete=models.SET_NULL, blank=True, null=True)
     job_id = models.ManyToManyField(Job, blank=True)
@@ -32,7 +36,8 @@ class Order(models.Model):
     full_desc = models.TextField(default="", blank=True, null=True)
     image = models.ImageField(upload_to='client_image/', blank=True, null=True)
     worker_count = models.IntegerField(default=1)
-    is_finish = models.BooleanField(default=False)
+    client_is_finished = models.BooleanField(default=False)
+    worker_is_finished = models.BooleanField(default=False)
     gender = models.CharField(max_length=10, choices=GENDER_CHOICES, default='Male')
     view_count = models.IntegerField(default=0)
     status = models.CharField(
@@ -46,6 +51,10 @@ class Order(models.Model):
 
     def __str__(self):
         return f"Order {self.client} by {self.worker}"
+
+    def get_finished_workers(self):
+        return ", ".join([worker.full_name for worker in self.finished_workers.all()])
+
 
 
 

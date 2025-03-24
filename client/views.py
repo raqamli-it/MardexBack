@@ -11,7 +11,7 @@ from django.shortcuts import get_object_or_404
 from rest_framework import generics, status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
-from rest_framework.permissions import AllowAny, IsAuthenticated  # Foydalanuvchi autentifikatsiyasi
+from rest_framework.permissions import AllowAny, IsAuthenticated, BasePermission  # Foydalanuvchi autentifikatsiyasi
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 from .serializer import (ClientRegistrationSerializer, ClientLoginSerializer, ClientPasswordChangeSerializer,
@@ -20,7 +20,9 @@ from .serializer import (ClientRegistrationSerializer, ClientLoginSerializer, Cl
 from django.contrib.auth import get_user_model
 from job.models import Job, CategoryJob
 from job.serializer import CategoryJobSerializer, JobSerializer
+
 User = get_user_model()
+
 
 ### Order Views
 
@@ -62,8 +64,6 @@ class OrderCreateView(generics.CreateAPIView):
         })
 
 
-### Job Views
-
 class JobListByCategoryView(APIView):
     def get(self, request, pk):
         category_job = get_object_or_404(CategoryJob, id=pk)
@@ -84,8 +84,7 @@ def categoryjob_list(request):
     return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-### Client Views
-
+# Client Views
 class ClientRegistrationView(generics.CreateAPIView):
     queryset = User.objects.all()
     serializer_class = ClientRegistrationSerializer
@@ -120,10 +119,15 @@ class ClientLoginView(generics.GenericAPIView):
         serializer.is_valid(raise_exception=True)
         client = serializer.validated_data
 
+        if client.role != 'client':
+            return Response({"error": "Only clients can login here."}, status=status.HTTP_403_FORBIDDEN)
+
         # Foydalanuvchining aktiv tarifini olish yoki 0 so‘mlik tarifni ulash
         tarif_info = self.get_or_assign_tarif(client)
 
         refresh = RefreshToken.for_user(client)
+        refresh['role'] = client.role
+
         return Response({
             "refresh": str(refresh),
             "access": str(refresh.access_token),
@@ -168,9 +172,18 @@ class ClientLoginView(generics.GenericAPIView):
         }
 
 
+class IsClient(BasePermission):
+    def has_permission(self, request, view):
+        # Tokendagi rolni tekshirish
+        token = request.auth
+        if token:
+            return token.get('role') == 'client'
+        return False
+
+
 class ClientPasswordChangeView(generics.GenericAPIView):
     serializer_class = ClientPasswordChangeSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsClient]
 
     def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
@@ -180,7 +193,6 @@ class ClientPasswordChangeView(generics.GenericAPIView):
 
     def perform_update(self, serializer):
         serializer.save()
-
 
 
 class ClientDetailView(APIView):

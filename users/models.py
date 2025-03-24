@@ -52,15 +52,24 @@ class AbstractUser(AbstractBaseUser, PermissionsMixin):
         ('Male', 'Erkak'),
         ('Female', 'Ayol'),
     ]
+
+    STATUS_CHOICES = [
+        ('idle', 'Boʻsh'),  # Faqat worker uchun
+        ('working', 'Ishlayapti'),  # Faqat worker uchun
+        ('waiting_confirmation', 'Tasdiqlashni kutmoqda'),  # Har ikki rol uchun
+        ('completed', 'Yakunlandi'),  # Har ikki rol uchun
+        ('active', 'Faol'),  # Faqat client uchun
+
+    ]
+
     role = models.CharField(max_length=50, choices=ROLE_CHOICES, )
     gender = models.CharField(max_length=10, choices=GENDER_CHOICES, default='Male')
-
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='idle')
     full_name = models.CharField(max_length=255)
-    phone = models.CharField(max_length=15, unique=True, blank=True, null=True)
-    region = models.ForeignKey(Region, on_delete=models.SET_NULL, blank=True, null=True)
-    city = models.ForeignKey(City, on_delete=models.SET_NULL, blank=True, null=True)
+    phone = models.CharField(max_length=15, unique=True)
+    region = models.ForeignKey(Region, on_delete=models.CASCADE)
+    city = models.ForeignKey(City, on_delete=models.CASCADE)
     # location = models.JSONField(geography=True, blank=True, null=True)
-
     passport_scan = models.ImageField(upload_to=image_create_time, blank=True, null=True)
     passport_back_scan = models.ImageField(upload_to=image_create_time, blank=True, null=True)
     passport_scan_with_face = models.ImageField(upload_to=image_create_time, blank=True, null=True)
