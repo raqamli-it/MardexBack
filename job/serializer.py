@@ -21,7 +21,7 @@ class CategoryJobSerializer(serializers.ModelSerializer):
 class RegionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Region
-        fields = ['id', 'title', ]
+        fields = ['id', 'title', 'city_id']
 
 
 class CitySerializer(serializers.ModelSerializer):

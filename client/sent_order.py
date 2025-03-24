@@ -6,7 +6,6 @@ from asgiref.sync import async_to_sync, sync_to_async
 from channels.layers import get_channel_layer
 from client.models import Order
 from client.serializer import OrderSerializer
-from config import settings
 from job.views import get_filtered_workers
 import asyncio
 
