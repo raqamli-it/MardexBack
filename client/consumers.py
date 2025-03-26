@@ -108,8 +108,8 @@ class OrderActionConsumer(AsyncWebsocketConsumer):
             await self.reject_order(order_id)
         elif action == "confirm":
             await self.confirm_order(order_id)
-        elif action == "cancel":
-            await self.cancel_order(order_id)
+        # elif action == "cancel":
+        #     await self.cancel_order(order_id)
         else:
             await self.send_error("Invalid action")
 
@@ -181,32 +181,24 @@ class OrderActionConsumer(AsyncWebsocketConsumer):
         worker.save()
 
     async def accept_order(self, order_id):
-        try:
-            order = await self.get_order_with_client(order_id)
-            if not order:
-                await self.send(text_data=json.dumps({"error": "Order not found"}))
-                return
-        except Exception as e:
-            await self.send(text_data=json.dumps({"error": str(e)}))
+        # Worker obyektini yangilash
+        worker = await self.get_worker(self.user.id)  # Worker ma'lumotlarini qayta yuklaymiz
+
+        order = await self.get_order_with_client(order_id)
+        if not order:
+            await self.send(text_data=json.dumps({"error": "Order not found"}))
             return
 
         if order.status != "stable" and order.status != "in_progress":
-            await self.send(text_data=json.dumps({"error": "Order is not available for acceptance"}))
-            return
-
-        worker = self.user
-        client = order.client
-
-        if not worker:
-            await self.send(text_data=json.dumps({"error": "Worker not found"}))
+            await self.send(text_data=json.dumps({"error": "Order is not available"}))
             return
 
         if worker.status != "idle":
             await self.send(text_data=json.dumps({"error": "Worker is not available"}))
             return
 
+        # Worker orderni qabul qiladi
         await self.remove_notified_worker(order, worker)
-
         await self.add_accepted_worker(order, worker)
 
         if order.status == "stable":
@@ -217,15 +209,13 @@ class OrderActionConsumer(AsyncWebsocketConsumer):
         await self.save_order(order)
         await self.save_worker(worker)
 
-        await self.send_update([client.id], order.id, order.status, worker.id)
+        await self.send_update([order.client.id], order.id, order.status, worker.id)
 
-        await self.send(text_data=json.dumps(
-            {
-                "message": "Order accepted",
-                "order_status": order.status,
-                "worker_status": worker.status
-            }
-        ))
+        await self.send(text_data=json.dumps({
+            "message": "Order accepted",
+            "order_status": order.status,
+            "worker_status": worker.status
+        }))
 
     async def reject_order(self, order_id):
         try:
@@ -314,27 +304,3 @@ class OrderActionConsumer(AsyncWebsocketConsumer):
         }))
 
 
-# import json
-#
-# from channels.generic.websocket import AsyncWebsocketConsumer
-#
-#
-# class OrderConsumer(AsyncWebsocketConsumer):
-#     """Faqat tegishli workerlarga yangi order haqida xabar yuborish"""
-#
-#     async def connect(self):
-#         """Worker-lar o‘ziga tegishli kanalga qo‘shiladi"""
-#         self.worker_id = self.scope['url_route']['kwargs']['worker_id']
-#         self.worker_room = f"worker_{self.worker_id}"
-#         await self.channel_layer.group_add(self.worker_room, self.channel_name)
-#
-#         await self.accept()
-#
-#     async def disconnect(self, close_code):
-#         """Worker kanalni tark etganda"""
-#         if hasattr(self, 'worker_room'):
-#             await self.channel_layer.group_discard(self.worker_room, self.channel_name)
-#
-#     async def send_order_notification(self, event):
-#         """Yangi order haqida xabar yuborish"""
-#         await self.send(text_data=json.dumps(event))
