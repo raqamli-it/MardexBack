@@ -12,7 +12,7 @@ class WorkerImageInline(admin.TabularInline):
 
 @admin.register(User)
 class ProfileAdmin(admin.ModelAdmin):
-    list_display = ['id', 'full_name', 'role', 'gender', 'phone', 'is_superuser']
+    list_display = ['id', 'full_name', 'status', 'role', 'gender', 'phone', 'is_superuser']
     list_filter = ['role', 'gender', 'region', 'city']
     search_fields = ['id', 'full_name_uz', 'phone',]
     fields = ['full_name_uz', 'full_name_ru', 'full_name_en',

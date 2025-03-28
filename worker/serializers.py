@@ -88,7 +88,7 @@ class WorkerSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = AbstractUser
-        fields = ['id', 'full_name', 'avatar', 'job_id', 'description', 'reyting', 'images',]
+        fields = ['id', 'full_name', 'avatar', 'job_id', 'description', 'reyting', 'images', ]
 
 
 class WorkerUpdateSerializer(serializers.ModelSerializer):
@@ -102,7 +102,7 @@ class WorkerUpdateSerializer(serializers.ModelSerializer):
 class UserUpdateSerializer(serializers.ModelSerializer):
     job_category = serializers.PrimaryKeyRelatedField(queryset=CategoryJob.objects.all())
     job_id = serializers.PrimaryKeyRelatedField(queryset=Job.objects.all(),
-                                                many=True)  # job_id - bu ManyToManyField, shuning uchun many=True
+                                                many=True)
 
     class Meta:
         model = AbstractUser  # Bu serializer AbstractUser modeliga tegishli

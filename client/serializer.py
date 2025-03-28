@@ -9,15 +9,14 @@ User = get_user_model()
 
 
 class OrderSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = Order
-        fields = ['id', 'job_category', 'job_id', 'desc', 'price', 'full_desc', 'region', 'city', 'gender', 'worker_count', 'image']
+        fields = ['id', 'job_category', 'job_id', 'desc', 'price', 'full_desc', 'region', 'city', 'gender',
+                  'worker_count', 'image']
 
     def create(self, validated_data):
         validated_data['client'] = self.context['request'].user
         return super().create(validated_data)
-
 
 
 class ClientRegistrationSerializer(serializers.ModelSerializer):
@@ -34,7 +33,6 @@ class ClientRegistrationSerializer(serializers.ModelSerializer):
         return data
 
     def create(self, validated_data):
-        # Parol tasdiqlash maydonini o'chirish
         validated_data.pop('password_confirmation')
 
         client = User(
@@ -118,16 +116,14 @@ class ClientPasswordChangeSerializer(serializers.Serializer):
 
 class ClientDetailSerializer(serializers.ModelSerializer):
     class Meta:
-
         model = AbstractUser
         fields = ['id', 'phone', 'full_name', 'avatar', 'description']
 
 
 class WorkerProfileSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = ClientReyting
-        fields = ['id', 'reyting', 'active_orders', 'completed_orders', 'cancelled_orders',]
+        fields = ['id', 'reyting', 'active_orders', 'completed_orders', 'cancelled_orders', ]
 
 
 class ClientNewsSerializer(serializers.ModelSerializer):
@@ -135,13 +131,13 @@ class ClientNewsSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ClientNews
-        fields = ['id', 'description', 'image', 'created_at',]
+        fields = ['id', 'description', 'image', 'created_at', ]
 
 
 class ClientTarifSerializer(serializers.ModelSerializer):
     class Meta:
         model = ClientTarif
-        fields = ['id', 'name', 'price', 'top_limit', 'call_limit',]
+        fields = ['id', 'name', 'price', 'top_limit', 'call_limit', ]
 
 
 class TarifHaridiSerializer(serializers.ModelSerializer):
@@ -149,7 +145,7 @@ class TarifHaridiSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = TarifHaridi
-        fields = ['id', 'user', 'tarif_id', 'status',]
+        fields = ['id', 'user', 'tarif_id', 'status', ]
 
 
 class ClientPhoneUpdateSerializer(serializers.Serializer):

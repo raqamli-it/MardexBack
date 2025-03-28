@@ -11,7 +11,7 @@ from django.shortcuts import get_object_or_404
 from rest_framework import generics, status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
-from rest_framework.permissions import AllowAny, IsAuthenticated, BasePermission  # Foydalanuvchi autentifikatsiyasi
+from rest_framework.permissions import AllowAny, IsAuthenticated, BasePermission
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 from .serializer import (ClientRegistrationSerializer, ClientLoginSerializer, ClientPasswordChangeSerializer,
@@ -34,8 +34,8 @@ class OrderCreateView(generics.CreateAPIView):
 
     def perform_create(self, serializer):
         """Order yaratish va filterlangan workerlarni qaytarish"""
-        self.order = serializer.save(client=self.request.user)  # Orderni yaratish
-        self.eligible_workers = get_filtered_workers(self.order)  # Filterlangan workerlarni olish
+        self.order = serializer.save(client=self.request.user)
+        self.eligible_workers = get_filtered_workers(self.order)
 
     def create(self, request, *args, **kwargs):
         """Overriding to return custom response"""
@@ -59,8 +59,8 @@ class OrderCreateView(generics.CreateAPIView):
 
         return Response({
             "detail": "Order muvaffaqiyatli yaratildi!",
-            "order": OrderSerializer(self.order).data,  # Order ma’lumotlari
-            "eligible_workers": workers_data  # Filterlangan workerlar ro‘yxati
+            "order": OrderSerializer(self.order).data,
+            "eligible_workers": workers_data
         })
 
 
@@ -122,7 +122,6 @@ class ClientLoginView(generics.GenericAPIView):
         if client.role != 'client':
             return Response({"error": "Only clients can login here."}, status=status.HTTP_403_FORBIDDEN)
 
-        # Foydalanuvchining aktiv tarifini olish yoki 0 so‘mlik tarifni ulash
         tarif_info = self.get_or_assign_tarif(client)
 
         refresh = RefreshToken.for_user(client)
@@ -282,7 +281,6 @@ class FilteredWorkerListView(generics.ListAPIView):
     serializer_class = WorkerSerializer
 
     def get_queryset(self):
-        """Order bo‘yicha filter qilingan worker-larni qaytarish"""
         order_id = self.kwargs.get("order_id")
         try:
             order = Order.objects.get(id=order_id)

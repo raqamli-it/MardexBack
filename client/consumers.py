@@ -93,11 +93,14 @@ class OrderActionConsumer(AsyncWebsocketConsumer):
     async def receive(self, text_data=None, bytes_data=None):
         try:
             data = json.loads(text_data)
+            await self.send(text_data=json.dumps({"debug": "Received request", "data": data}))
+
         except json.JSONDecodeError:
             return await self.send_error("Invalid JSON format")
 
         action = data.get("action")
         order_id = data.get("order_id")
+        worker_ids = data.get('worker_ids', [])
 
         if not isinstance(order_id, int):
             return await self.send_error("Invalid or missing order_id")
@@ -108,8 +111,8 @@ class OrderActionConsumer(AsyncWebsocketConsumer):
             await self.reject_order(order_id)
         elif action == "confirm":
             await self.confirm_order(order_id)
-        # elif action == "cancel":
-        #     await self.cancel_order(order_id)
+        elif action == "cancel":
+            await self.cancel_order(order_id, worker_ids)
         else:
             await self.send_error("Invalid action")
 
@@ -146,7 +149,7 @@ class OrderActionConsumer(AsyncWebsocketConsumer):
             if worker_id:
                 message["worker_id"] = worker_id
 
-            print(f"Sending update to user_{user_id}: {message}")
+            # print(f"Sending update to user_{user_id}: {message}")
 
             await self.channel_layer.group_send(
                 f"user_{user_id}",
@@ -181,8 +184,7 @@ class OrderActionConsumer(AsyncWebsocketConsumer):
         worker.save()
 
     async def accept_order(self, order_id):
-        # Worker obyektini yangilash
-        worker = await self.get_worker(self.user.id)  # Worker ma'lumotlarini qayta yuklaymiz
+        worker = await self.get_worker(self.user.id)
 
         order = await self.get_order_with_client(order_id)
         if not order:
@@ -197,7 +199,6 @@ class OrderActionConsumer(AsyncWebsocketConsumer):
             await self.send(text_data=json.dumps({"error": "Worker is not available"}))
             return
 
-        # Worker orderni qabul qiladi
         await self.remove_notified_worker(order, worker)
         await self.add_accepted_worker(order, worker)
 
@@ -243,7 +244,6 @@ class OrderActionConsumer(AsyncWebsocketConsumer):
             await self.send(text_data=json.dumps({"error": "Worker was not notified or already responded"}))
             return
 
-        # Faqat shu order bo‘yicha worker accepted bo‘lgan bo‘lsa reject qila olmaydi
         if order.status == "stable" or (order.status == "in_progress" and not is_accepted):
             await sync_to_async(order.rejected_workers.add)(worker)
             await sync_to_async(order.notified_workers.remove)(worker)
@@ -252,7 +252,8 @@ class OrderActionConsumer(AsyncWebsocketConsumer):
 
             await self.send(text_data=json.dumps({"message": "Order rejected"}))
         else:
-            await self.send(text_data=json.dumps({"error": "You have already accepted this order, you cannot reject it"}))
+            await self.send(
+                text_data=json.dumps({"error": "You have already accepted this order, you cannot reject it"}))
 
     async def confirm_order(self, order_id):
         try:
@@ -303,4 +304,58 @@ class OrderActionConsumer(AsyncWebsocketConsumer):
             "order_status": order.status
         }))
 
+    async def cancel_order(self, order_id, worker_ids=None):
+        try:
+            order = await self.get_order_with_client(order_id)
+            if not order:
+                return await self.send_error("Order not found")
+
+            if order.status != "in_progress":
+                return await self.send_error("Order is not in cancellable status")
+
+            workers = await sync_to_async(list)(order.accepted_workers.all())
+            worker_ids_in_order = [w.id for w in workers]
+
+            # print(f"self.user: {self.user}")
+            # print(f"self.user.__dict__: {self.user.__dict__}")
+
+            is_client = self.user == order.client
+            is_worker = self.user.role == "worker" and self.user.id in worker_ids_in_order
+
+            # print(f"is_worker: {is_worker}, is_client: {is_client}")
+
+            if not (is_client or is_worker):
+                return await self.send_error("Permission denied")
+
+            if is_worker:
+                to_cancel = [w for w in workers if w.id == self.user.id]
+            elif is_client:
+                to_cancel = workers
+            else:
+                return await self.send_error("Invalid request")
+
+            for worker in to_cancel:
+                await sync_to_async(order.accepted_workers.remove)(worker)
+                worker.status = "idle"
+                await self.save_worker(worker)
+
+            remaining = await sync_to_async(list)(order.accepted_workers.all())
+            if not remaining:
+                order.status = "cancel_worker" if is_worker else "cancel_client"
+                await self.save_order(order)
+
+            return await self.send_result({
+                "cancelled": [w.id for w in to_cancel],
+                "remaining": [w.id for w in remaining],
+                "status": order.status,
+                "initiator": "worker" if is_worker else "client"
+            })
+
+        except Exception as e:
+            return await self.send_error(f"Error: {str(e)}")
+
+    async def send_result(self, data):
+        result = {"message": "Success", **data, "success": True}
+        await self.send(text_data=json.dumps(result))
+        return result
 

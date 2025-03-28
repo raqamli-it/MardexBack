@@ -54,12 +54,11 @@ class AbstractUser(AbstractBaseUser, PermissionsMixin):
     ]
 
     STATUS_CHOICES = [
-        ('idle', 'Boʻsh'),  # Faqat worker uchun
-        ('working', 'Ishlayapti'),  # Faqat worker uchun
-        ('waiting_confirmation', 'Tasdiqlashni kutmoqda'),  # Har ikki rol uchun
-        ('completed', 'Yakunlandi'),  # Har ikki rol uchun
-        ('active', 'Faol'),  # Faqat client uchun
-
+        ('idle', 'Boʻsh'),
+        ('working', 'Ishlayapti'),
+        ('waiting_confirmation', 'Tasdiqlashni kutmoqda'),
+        ('completed', 'Yakunlandi'),
+        ('active', 'Faol'),
     ]
 
     role = models.CharField(max_length=50, choices=ROLE_CHOICES, )

@@ -164,17 +164,11 @@ class WorkerPhoneUpdateView(generics.GenericAPIView):
 class RegionListByCityView(APIView):
 
     def get(self, request, pk):
-        # Shaharning `id`si bo‘yicha City modelini topamiz
         city = get_object_or_404(City, id=pk)
-
-        # Ushbu shaharga tegishli Regionlarni olish
         regions = Region.objects.filter(city_id=city)
-
-        # Serializerlar bilan ma'lumotlarni formatlaymiz
         city_serializer = CitySerializer(city, context={'request': request})
         regions_serializer = RegionSerializer(regions, many=True, context={'request': request})
 
-        # Natijani birlashtirib qaytaramiz
         result = city_serializer.data
         result['regions'] = regions_serializer.data
 
