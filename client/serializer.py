@@ -14,9 +14,16 @@ class OrderSerializer(serializers.ModelSerializer):
         fields = ['id', 'job_category', 'job_id', 'desc', 'price', 'full_desc', 'region', 'city', 'gender',
                   'worker_count', 'image']
 
+    def validate(self, data):
+        request = self.context['request']
+        if request.user.role != "client":
+            raise serializers.ValidationError("Only clients can create orders.")
+        return data
+
     def create(self, validated_data):
         validated_data['client'] = self.context['request'].user
         return super().create(validated_data)
+
 
 
 class ClientRegistrationSerializer(serializers.ModelSerializer):

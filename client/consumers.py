@@ -316,23 +316,30 @@ class OrderActionConsumer(AsyncWebsocketConsumer):
             workers = await sync_to_async(list)(order.accepted_workers.all())
             worker_ids_in_order = [w.id for w in workers]
 
-            # print(f"self.user: {self.user}")
-            # print(f"self.user.__dict__: {self.user.__dict__}")
+            # print(f"🔍 Orderdagi Workerlar: {worker_ids_in_order}")
 
             is_client = self.user == order.client
-            is_worker = self.user.role == "worker" and self.user.id in worker_ids_in_order
+            current_worker = self.user if self.user.role == "worker" else None
+            is_worker = bool(current_worker and current_worker.id in worker_ids_in_order)
 
-            # print(f"is_worker: {is_worker}, is_client: {is_client}")
+            # print(f"🔍 Current Worker: {current_worker}")
+            # print(f"🛠 is_worker: {is_worker}, is_client: {is_client}")
 
             if not (is_client or is_worker):
                 return await self.send_error("Permission denied")
 
+            # Worker faqat o‘zini cancel qilishi kerak
             if is_worker:
-                to_cancel = [w for w in workers if w.id == self.user.id]
-            elif is_client:
-                to_cancel = workers
+                to_cancel = [w for w in workers if w.id == current_worker.id]
+            elif is_client and worker_ids:
+                to_cancel = [w for w in workers if w.id in worker_ids]
             else:
                 return await self.send_error("Invalid request")
+
+            if not to_cancel:
+                return await self.send_error("No workers to cancel")
+
+            # print(f"To Cancel List: {[w.id for w in to_cancel]}")
 
             for worker in to_cancel:
                 await sync_to_async(order.accepted_workers.remove)(worker)
