@@ -4,6 +4,7 @@ from rest_framework import generics, status
 from rest_framework.generics import UpdateAPIView, RetrieveAPIView
 from rest_framework.parsers import MultiPartParser
 from rest_framework.permissions import AllowAny, IsAuthenticated, BasePermission  # Foydalanuvchi autentifikatsiyasi
+from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.db.models import Q
 
@@ -14,7 +15,7 @@ from .models import WorkerNews
 from .serializers import WorkerRegistrationSerializer, WorkerLoginSerializer, \
     WorkerPasswordChangeSerializer, UserUpdateSerializer, \
     WorkerImageSerializer, WorkerJobSerializer, WorkerPhoneUpdateSerializer, WorkerNewsSerializer, \
-    WorkerUpdateSerializer, WorkerImageDeleteSerializer
+    WorkerUpdateSerializer, WorkerImageDeleteSerializer, WorkerActiveSerializer
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from users.models import AbstractUser
@@ -265,3 +266,41 @@ class WorkerNewsDetailView(APIView):
         worker_news = get_object_or_404(WorkerNews, pk=pk)
         serializer = WorkerNewsSerializer(worker_news, context={'request': request})
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class WorkerActiveView(APIView):
+    authentication_classes = []  # Avto-auth o‘chiriladi
+    permission_classes = []      # Permission ham
+
+    def authenticate_user(self, request):
+        jwt_authenticator = JWTAuthentication()
+        try:
+            user, validated_token = jwt_authenticator.authenticate(request)
+            return user
+        except Exception:
+            return None
+
+    def get(self, request):
+        user = self.authenticate_user(request)
+        if not user:
+            return Response({"detail": "Invalid or missing token"}, status=status.HTTP_401_UNAUTHORIZED)
+
+        if user.role != "worker":
+            return Response({"detail": "Only workers can access this endpoint."}, status=status.HTTP_403_FORBIDDEN)
+
+        serializer = WorkerActiveSerializer(user)
+        return Response(serializer.data)
+
+    def post(self, request):
+        user = self.authenticate_user(request)
+        if not user:
+            return Response({"detail": "Invalid or missing token"}, status=status.HTTP_401_UNAUTHORIZED)
+
+        if user.role != "worker":
+            return Response({"detail": "Only workers can update this."}, status=status.HTTP_403_FORBIDDEN)
+
+        serializer = WorkerActiveSerializer(user, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

@@ -2,7 +2,7 @@ from django.urls import path
 from .views import WorkerRegistrationView, WorkerLoginView, WorkerPasswordChangeView, \
     JobListByCategoryView, categoryjob_list, UpdateUserJobView, OrderStatisticsAPIView, \
     WorkerProfileUpdateView, AddWorkerImageView, WorkerProfileDetailView, DeleteWorkerImagesView, \
-    WorkerNewsDetailView
+    WorkerNewsDetailView, WorkerActiveView
 from .views import (RegionListByCityView, WorkerJobListView,
                     WorkerPhoneUpdateView, JobSearchAPIView, workernews_list)
 
@@ -47,5 +47,7 @@ urlpatterns = [
 
     # worker imagelarini 2 ta yoki 3 tagacha tanlab bittada delete qilish uchun url
     path('delete-images/', DeleteWorkerImagesView.as_view(), name='delete-images'),
+
+    path('worker/active/', WorkerActiveView.as_view(), name='worker-availability'),
 
 ]

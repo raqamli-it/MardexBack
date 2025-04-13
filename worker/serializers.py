@@ -210,3 +210,9 @@ class WorkerImageDeleteSerializer(serializers.Serializer):
         # Ruxsat bo'lgan rasmlarni o'chirish
         WorkerImage.objects.filter(id__in=image_ids, user=user).delete()
         return image_ids
+
+
+class WorkerActiveSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = AbstractUser
+        fields = ['id', 'is_worker_active', ]

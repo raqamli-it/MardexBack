@@ -88,13 +88,14 @@ class AbstractUser(AbstractBaseUser, PermissionsMixin):
     is_staff = models.BooleanField(default=False)
     is_superuser = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
+    is_worker_active = models.BooleanField(default=True)
     is_online = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
 
     objects = UserManager()
 
     USERNAME_FIELD = 'phone'
-    REQUIRED_FIELDS = ['full_name']
+    REQUIRED_FIELDS = ['full_name', 'region', 'city',]
 
     def __str__(self):
         return f"{self.full_name} | {self.phone}"

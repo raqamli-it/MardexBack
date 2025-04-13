@@ -316,14 +316,9 @@ class OrderActionConsumer(AsyncWebsocketConsumer):
             workers = await sync_to_async(list)(order.accepted_workers.all())
             worker_ids_in_order = [w.id for w in workers]
 
-            # print(f"🔍 Orderdagi Workerlar: {worker_ids_in_order}")
-
             is_client = self.user == order.client
             current_worker = self.user if self.user.role == "worker" else None
             is_worker = bool(current_worker and current_worker.id in worker_ids_in_order)
-
-            # print(f"🔍 Current Worker: {current_worker}")
-            # print(f"🛠 is_worker: {is_worker}, is_client: {is_client}")
 
             if not (is_client or is_worker):
                 return await self.send_error("Permission denied")
@@ -351,6 +346,20 @@ class OrderActionConsumer(AsyncWebsocketConsumer):
                 order.status = "cancel_worker" if is_worker else "cancel_client"
                 await self.save_order(order)
 
+            if is_worker:
+                await self.send_update(
+                    [order.client.id],
+                    order.id,
+                    order.status,
+                    worker_id=current_worker.id
+                )
+            # elif is_client:
+            #     await self.send_update(
+            #         [w.id for w in to_cancel],
+            #         order.id,
+            #         order.status
+            #     )
+
             return await self.send_result({
                 "cancelled": [w.id for w in to_cancel],
                 "remaining": [w.id for w in remaining],
@@ -365,4 +374,3 @@ class OrderActionConsumer(AsyncWebsocketConsumer):
         result = {"message": "Success", **data, "success": True}
         await self.send(text_data=json.dumps(result))
         return result
-
