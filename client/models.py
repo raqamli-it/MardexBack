@@ -34,7 +34,6 @@ class Order(models.Model):
     price = models.CharField(max_length=255, blank=True, null=True)
     desc = models.TextField(default="", blank=True, null=True)
     full_desc = models.TextField(default="", blank=True, null=True)
-    image = models.ImageField(upload_to='client_image/', blank=True, null=True)
     worker_count = models.IntegerField(default=1)
     client_is_finished = models.BooleanField(default=False)
     worker_is_finished = models.BooleanField(default=False)
@@ -56,6 +55,12 @@ class Order(models.Model):
         return ", ".join([worker.full_name for worker in self.finished_workers.all()])
 
 
+class OrderImage(models.Model):
+    order = models.ForeignKey('Order', on_delete=models.CASCADE, related_name='images')
+    image = models.ImageField(upload_to='client_image/', blank=True, null=True)
+
+    def __str__(self):
+        return f"Image for Order ID {self.order.id}"
 
 
 class ClientReyting(models.Model):

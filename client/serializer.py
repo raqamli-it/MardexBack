@@ -1,5 +1,5 @@
 from users.models import AbstractUser
-from .models import ClientReyting
+from .models import ClientReyting, OrderImage
 from .models import Order, ClientNews, ClientTarif, TarifHaridi
 
 from rest_framework import serializers
@@ -8,11 +8,26 @@ from django.contrib.auth import get_user_model
 User = get_user_model()
 
 
+class OrderImageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = OrderImage
+        fields = ['id', 'image']
+
+
+
 class OrderSerializer(serializers.ModelSerializer):
+    images = OrderImageSerializer(many=True, read_only=True)  # natijani ko'rsatish uchun
+    image = serializers.ListField(                     # yuklash uchun
+        child=serializers.ImageField(),
+        write_only=True,
+        required=False
+    )
+
     class Meta:
         model = Order
-        fields = ['id', 'job_category', 'job_id', 'desc', 'price', 'full_desc', 'region', 'city', 'gender',
-                  'worker_count', 'image']
+        fields = ['id', 'job_category', 'job_id', 'desc', 'price', 'full_desc',
+                  'region', 'city', 'gender', 'worker_count',
+                  'latitude', 'longitude', 'images', 'image']
 
     def validate(self, data):
         request = self.context['request']
@@ -21,8 +36,19 @@ class OrderSerializer(serializers.ModelSerializer):
         return data
 
     def create(self, validated_data):
+        image_files = validated_data.pop('image', [])  # yangi fayllar
+        job_ids = validated_data.pop('job_id', [])
         validated_data['client'] = self.context['request'].user
-        return super().create(validated_data)
+
+        order = Order.objects.create(**validated_data)
+
+        if job_ids:
+            order.job_id.set(job_ids)
+
+        for img in image_files[:5]:
+            OrderImage.objects.create(order=order, image=img)
+
+        return order
 
 
 

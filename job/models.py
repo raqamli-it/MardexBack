@@ -31,7 +31,7 @@ class Job(models.Model):
 
 
 class City(models.Model):
-    title = models.CharField(max_length=255, verbose_name="City Name")
+    title = models.CharField(max_length=255, verbose_name="City Name", null=True, blank=True)
 
     class Meta:
         verbose_name = "City"
@@ -42,8 +42,8 @@ class City(models.Model):
 
 
 class Region(models.Model):
-    title = models.CharField(max_length=255, verbose_name="City Name")
-    city_id = models.ForeignKey(City, on_delete=models.CASCADE)
+    title = models.CharField(max_length=255, verbose_name="City Name", null=True, blank=True,)
+    city_id = models.ForeignKey(City, null=True, blank=True, on_delete=models.SET_NULL)
 
     class Meta:
         verbose_name = "Region"
