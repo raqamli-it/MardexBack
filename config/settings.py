@@ -96,23 +96,23 @@ ASGI_APPLICATION = 'config.asgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
-}
-
 # DATABASES = {
 #     'default': {
-#         'ENGINE': 'django.db.backends.postgresql',
-#         'NAME': 'mardex',  # PostgreSQL bazasi nomi
-#         'USER': 'user_mardex',  # PostgreSQL foydalanuvchi nomi
-#         'PASSWORD': 'password_mardex',  # PostgreSQL paroli
-#         'HOST': 'mardex_db',  # Docker Compose'dagi konteyner nomi
-#         'PORT': '5432',  # PostgreSQL uchun standart port
+#         'ENGINE': 'django.db.backends.sqlite3',
+#         'NAME': BASE_DIR / 'db.sqlite3',
 #     }
 # }
+
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'mardex',  # PostgreSQL bazasi nomi
+        'USER': 'user_mardex',  # PostgreSQL foydalanuvchi nomi
+        'PASSWORD': 'password_mardex',  # PostgreSQL paroli
+        'HOST': 'mardex_db',  # Docker Compose'dagi konteyner nomi
+        'PORT': '5432',  # PostgreSQL uchun standart port
+    }
+}
 
 
 # sss
