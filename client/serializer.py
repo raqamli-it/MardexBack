@@ -13,6 +13,10 @@ class OrderImageSerializer(serializers.ModelSerializer):
         model = OrderImage
         fields = ['id', 'image']
 
+class ClientInfoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['full_name', 'phone']
 
 
 class OrderSerializer(serializers.ModelSerializer):
@@ -22,12 +26,14 @@ class OrderSerializer(serializers.ModelSerializer):
         write_only=True,
         required=False
     )
+    client_info = ClientInfoSerializer(source='client', read_only=True)  # Qo‘shildi
+
 
     class Meta:
         model = Order
         fields = ['id', 'job_category', 'job_id', 'desc', 'price', 'full_desc',
                   'region', 'city', 'gender', 'worker_count',
-                  'latitude', 'longitude', 'images', 'image']
+                  'latitude', 'longitude', 'images', 'image', 'client_info']
 
     def validate(self, data):
         request = self.context['request']
