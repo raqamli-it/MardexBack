@@ -1,14 +1,15 @@
 from rest_framework.decorators import api_view
 from django.shortcuts import get_object_or_404
 from rest_framework import generics, status
-from rest_framework.generics import UpdateAPIView, RetrieveAPIView
+from rest_framework.generics import UpdateAPIView, RetrieveAPIView, ListAPIView
 from rest_framework.parsers import MultiPartParser
 from rest_framework.permissions import AllowAny, IsAuthenticated, BasePermission  # Foydalanuvchi autentifikatsiyasi
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework_simplejwt.tokens import RefreshToken
-from django.db.models import Q
+from django.db.models import Q, Case, IntegerField, When
 
 from client.models import Order
+from client.serializer import OrderSerializer
 from job.models import Job, CategoryJob
 from job.serializer import JobSerializer, CategoryJobSerializer
 from .models import WorkerNews
@@ -304,3 +305,51 @@ class WorkerActiveView(APIView):
             serializer.save()
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+
+
+class WorkerPublicOrdersView(ListAPIView):
+    serializer_class = OrderSerializer
+    permission_classes = [AllowAny]  # Token talab qilinmaydi
+
+    def get_queryset(self):
+        worker_id = self.kwargs.get("worker_id")
+        return Order.objects.filter(
+            accepted_workers__id=worker_id,
+            status__in=['in_progress', 'success']  # 1-chi talab
+        ).order_by(
+            Case(  # 2-chi talab: in_progress oldinda
+                When(status='in_progress', then=0),
+                When(status='success', then=1),
+                default=2,
+                output_field=IntegerField()
+            ),
+            '-id'  # Har bir status ichida oxirgilar birinchi chiqadi
+        )
+
+
+
+# class WorkerOrderHistoryView(APIView):
+#     permission_classes = [IsAuthenticated]
+#
+#     def get(self, request):
+#         worker = request.user
+#
+#         # Avval faol orderlar
+#         active_orders = Order.objects.filter(
+#             accepted_workers=worker,
+#             status__in=['stable', 'in_progress']
+#         )
+#
+#         # So'ngra yakunlanganlar
+#         completed_orders = Order.objects.filter(
+#             accepted_workers=worker,
+#             status='success'
+#         )
+#
+#         # Ikkalasini birlashtirib yuboramiz
+#         orders = list(active_orders) + list(completed_orders)
+#         serializer = OrderSerializer(orders, many=True)
+#
+#         return Response(serializer.data)

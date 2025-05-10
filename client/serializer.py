@@ -27,13 +27,14 @@ class OrderSerializer(serializers.ModelSerializer):
         required=False
     )
     client_info = ClientInfoSerializer(source='client', read_only=True)  # Qo‘shildi
+    created_at = serializers.DateTimeField(format="%Y-%m-%d")
 
 
     class Meta:
         model = Order
         fields = ['id', 'job_category', 'job_id', 'desc', 'price', 'full_desc',
                   'region', 'city', 'gender', 'worker_count',
-                  'latitude', 'longitude', 'images', 'image', 'client_info']
+                  'latitude', 'longitude', 'images', 'image', 'client_info', 'created_at', 'status',]
 
     def validate(self, data):
         request = self.context['request']

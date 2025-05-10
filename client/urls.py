@@ -1,7 +1,8 @@
 from django.urls import path
 
 from .sent_order import SendOrderToSelectedWorkersView
-from .views import ClientDetailView, ClientNewsDetailView, OrderCreateView, FilteredWorkerListView
+from .views import ClientDetailView, ClientNewsDetailView, OrderCreateView, FilteredWorkerListView, \
+    ClientOrderHistoryListView
 
 from .views import (
     newsclient_list,
@@ -36,6 +37,8 @@ urlpatterns = [
 
     path('filtered-workers/<int:order_id>/', FilteredWorkerListView.as_view(), name='filtered-workers'),
     path('sent_order/', SendOrderToSelectedWorkersView.as_view(), name='sent-order'),
+
+    path('client/<int:client_id>/orders/history/', ClientOrderHistoryListView.as_view(), name='client-order-history'),
 
 ]
 if settings.DEBUG:

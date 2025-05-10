@@ -1,3 +1,5 @@
+from django.db.models import Case, When, IntegerField
+
 from job.views import get_filtered_workers
 from users.models import AbstractUser
 from worker.models import WorkerImage
@@ -287,3 +289,23 @@ class FilteredWorkerListView(generics.ListAPIView):
             return get_filtered_workers(order)
         except Order.DoesNotExist:
             return AbstractUser.objects.none()
+
+
+
+class ClientOrderHistoryListView(generics.ListAPIView):
+    serializer_class = OrderSerializer
+    permission_classes = [AllowAny]  # Token talab qilinmaydi
+
+    def get_queryset(self):
+        client_id = self.kwargs['client_id']
+        return Order.objects.filter(
+            client_id=client_id,
+            status__in=['in_progress', 'success']
+        ).annotate(
+            custom_order=Case(
+                When(status='in_progress', then=0),
+                When(status='success', then=1),
+                default=2,
+                output_field=IntegerField()
+            )
+        ).order_by('custom_order', '-created_at')
