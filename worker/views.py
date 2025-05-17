@@ -16,7 +16,7 @@ from .models import WorkerNews
 from .serializers import WorkerRegistrationSerializer, WorkerLoginSerializer, \
     WorkerPasswordChangeSerializer, UserUpdateSerializer, \
     WorkerImageSerializer, WorkerJobSerializer, WorkerPhoneUpdateSerializer, WorkerNewsSerializer, \
-    WorkerUpdateSerializer, WorkerImageDeleteSerializer, WorkerActiveSerializer
+    WorkerUpdateSerializer, WorkerImageDeleteSerializer, WorkerActiveSerializer, WorkerLocationUpdateSerializer
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from users.models import AbstractUser
@@ -353,3 +353,14 @@ class WorkerPublicOrdersView(ListAPIView):
 #         serializer = OrderSerializer(orders, many=True)
 #
 #         return Response(serializer.data)
+
+
+class UpdateWorkerLocationAPIView(APIView):
+    permission_classes = [IsWorker]
+
+    def post(self, request, *args, **kwargs):
+        serializer = WorkerLocationUpdateSerializer(request.user, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({'detail': 'Location updated'}, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

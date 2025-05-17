@@ -52,6 +52,8 @@ class OrderCreateView(generics.CreateAPIView):
                 "description": w.description,
                 "reyting": w.reyting,
                 "phone": w.phone,
+                "latitude": w.latitude,
+                "longitude": w.longitude,
                 "images": [
                     {"id": img.id, "image": img.image.url if img.image else None}
                     for img in WorkerImage.objects.filter(user=w)  # WorkerImage dan olish

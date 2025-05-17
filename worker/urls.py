@@ -2,10 +2,9 @@ from django.urls import path
 from .views import WorkerRegistrationView, WorkerLoginView, WorkerPasswordChangeView, \
     JobListByCategoryView, categoryjob_list, UpdateUserJobView, OrderStatisticsAPIView, \
     WorkerProfileUpdateView, AddWorkerImageView, WorkerProfileDetailView, DeleteWorkerImagesView, \
-    WorkerNewsDetailView, WorkerActiveView, WorkerPublicOrdersView
+    WorkerNewsDetailView, WorkerActiveView, WorkerPublicOrdersView, UpdateWorkerLocationAPIView
 from .views import (RegionListByCityView, WorkerJobListView,
                     WorkerPhoneUpdateView, JobSearchAPIView, workernews_list)
-
 
 urlpatterns = [
     path('register/', WorkerRegistrationView.as_view(), name='worker-register'),
@@ -36,7 +35,6 @@ urlpatterns = [
     path('workernews/', workernews_list),
     path('workernews/<int:pk>/', WorkerNewsDetailView.as_view(), name='workernews-detail'),
 
-
     # har bir worker o'zini profil uchun malumotlarini korishi uchun
     path('workers/detail/', WorkerProfileDetailView.as_view(), name='worker-profile-list'),
     # Har bir worker o'zini profilini malumotlarini Update Worker Profile
@@ -44,12 +42,11 @@ urlpatterns = [
     # Add Worker Image
     path('workers/profile/add-image/', AddWorkerImageView.as_view(), name='add-worker-image'),
 
-
     # worker imagelarini 2 ta yoki 3 tagacha tanlab bittada delete qilish uchun url
     path('delete-images/', DeleteWorkerImagesView.as_view(), name='delete-images'),
     path('worker/active/', WorkerActiveView.as_view(), name='worker-availability'),
 
     # workerni order tarixi
     path("workers/<int:worker_id>/orders/history/", WorkerPublicOrdersView.as_view()),
-
+    path('worker/update-location/', UpdateWorkerLocationAPIView.as_view(), name='update-location'),
 ]

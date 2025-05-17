@@ -216,3 +216,13 @@ class WorkerActiveSerializer(serializers.ModelSerializer):
     class Meta:
         model = AbstractUser
         fields = ['id', 'is_worker_active', ]
+
+class WorkerLocationUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['latitude', 'longitude']
+
+    def validate(self, attrs):
+        if self.instance.role != "worker":
+            raise serializers.ValidationError("Only workers can update location.")
+        return attrs
