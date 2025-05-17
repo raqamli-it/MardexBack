@@ -51,6 +51,7 @@ class OrderCreateView(generics.CreateAPIView):
                 "job_id": list(w.job_id.values_list("id", flat=True)),
                 "description": w.description,
                 "reyting": w.reyting,
+                "phone": w.phone,
                 "images": [
                     {"id": img.id, "image": img.image.url if img.image else None}
                     for img in WorkerImage.objects.filter(user=w)  # WorkerImage dan olish
