@@ -15,7 +15,7 @@ class JWTAuthMiddleware(BaseMiddleware):
     def get_user(self, token):
         try:
             payload = jwt.decode(token, settings.SECRET_KEY, algorithms=["HS256"])
-            return User.objects.get(id=payload["user_id"])
+            return User.objects.only("id", "role").get(id=payload["user_id"])  # faqat kerakli ustunlar
         except jwt.ExpiredSignatureError:
             logger.warning("JWT token expired.")
         except jwt.DecodeError:

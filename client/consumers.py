@@ -10,7 +10,7 @@ from django.contrib.auth import get_user_model
 User = get_user_model()
 
 
-class OrderConsumer(AsyncWebsocketConsumer):
+class UserOrderConsumer(AsyncWebsocketConsumer):
     async def connect(self):
         user = self.scope.get("user", None)
 
@@ -18,62 +18,31 @@ class OrderConsumer(AsyncWebsocketConsumer):
             await self.close()
             return
 
-        self.worker_id = self.scope["url_route"]["kwargs"]["worker_id"]
+        path = self.scope["path"]  # example: /ws/orders/ or /ws/clients/
+        user_role = getattr(user, "role", None)
+        # print(user_role)
 
-        if not await self.is_valid_worker(user, self.worker_id):
+        if path.startswith("/ws/worker/") and user_role == "worker":
+            self.room_group_name = f"worker_{user.id}"
+            # print(self.room_group_name)
+        elif path.startswith("/ws/clients/") and user_role == "client":
+            self.room_group_name = f"client_{user.id}"
+        else:
             await self.close()
             return
 
-        self.worker_room = f"worker_{self.worker_id}"
-        await self.channel_layer.group_add(self.worker_room, self.channel_name)
+        await self.channel_layer.group_add(self.room_group_name, self.channel_name)
         await self.accept()
 
     async def disconnect(self, close_code):
-        if hasattr(self, "worker_room"):
-            await self.channel_layer.group_discard(self.worker_room, self.channel_name)
+        if hasattr(self, "room_group_name"):
+            await self.channel_layer.group_discard(self.room_group_name, self.channel_name)
+
+    async def order_update(self, event):
+        await self.send(text_data=json.dumps(event))
 
     async def send_order_notification(self, event):
         await self.send(text_data=json.dumps(event))
-
-    async def order_update(self, event):
-        await self.send(text_data=json.dumps({
-            "order_id": event["order_id"],
-            "status": event["status"]
-        }))
-
-    @database_sync_to_async
-    def is_valid_worker(self, user, worker_id):
-        return str(user.id) == str(worker_id)
-
-
-class ClientConsumer(AsyncWebsocketConsumer):
-
-    async def connect(self):
-        user = self.scope.get('user', None)
-        if not user or isinstance(user, AnonymousUser):
-            await self.close()
-            return
-
-        self.client_id = self.scope["url_route"]["kwargs"]["client_id"]
-
-        if not await self.is_valid_client(user, self.client_id):
-            await self.close()
-            return
-
-        self.client_room = f"user_{self.client_id}"
-        await self.channel_layer.group_add(self.client_room, self.channel_name)
-        await self.accept()
-
-    async def disconnect(self, close_code):
-        if hasattr(self, "client_room"):
-            await self.channel_layer.group_discard(self.client_room, self.channel_name)
-
-    async def order_update(self, event):
-        await self.send(text_data=json.dumps(event))
-
-    @database_sync_to_async
-    def is_valid_client(self, user, client_id):
-        return str(user.id) == str(client_id)
 
 
 class OrderActionConsumer(AsyncWebsocketConsumer):
@@ -139,20 +108,30 @@ class OrderActionConsumer(AsyncWebsocketConsumer):
     async def send_error(self, message):
         await self.send(text_data=json.dumps({"error": message}))
 
-    async def send_update(self, user_ids, order_id, status, worker_id=None):
+    async def send_update(self, user_ids, order_id, status, worker=None):
         for user_id in user_ids:
             message = {
                 "type": "order_update",
                 "order_id": order_id,
                 "status": status,
             }
-            if worker_id:
-                message["worker_id"] = worker_id
+            if worker:
+                if isinstance(worker, int):
+                    # Faqat ID berilgan holat
+                    message["worker_id"] = worker
+                else:
+                    # Worker obyekti berilgan holat
+                    message["worker"] = {
+                        "id": worker.id,
+                        "full_name": worker.full_name,
+                        "phone": worker.phone,
+                        "image": worker.avatar.url if worker.avatar else None
+                    }
 
             # print(f"Sending update to user_{user_id}: {message}")
 
             await self.channel_layer.group_send(
-                f"user_{user_id}",
+                f"client_{user_id}",
                 message
             )
 
@@ -210,7 +189,10 @@ class OrderActionConsumer(AsyncWebsocketConsumer):
         await self.save_order(order)
         await self.save_worker(worker)
 
-        await self.send_update([order.client.id], order.id, order.status, worker.id)
+        await self.send_update([order.client.id], order.id,
+                               order.status,
+                               worker,
+                               )
 
         await self.send(text_data=json.dumps({
             "message": "Order accepted",
@@ -374,7 +356,3 @@ class OrderActionConsumer(AsyncWebsocketConsumer):
         result = {"message": "Success", **data, "success": True}
         await self.send(text_data=json.dumps(result))
         return result
-
-
-
-
