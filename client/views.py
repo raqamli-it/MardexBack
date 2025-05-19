@@ -312,3 +312,23 @@ class ClientOrderHistoryListView(generics.ListAPIView):
                 output_field=IntegerField()
             )
         ).order_by('custom_order', '-created_at')
+
+
+class ClientCancelStatsView(APIView):
+    permission_classes = [IsAuthenticated]  # Faqat login bo‘lganlar uchun
+
+    def get(self, request):
+        user = request.user
+
+        # Faqat client foydalanuvchilar uchun
+        if user.role != 'client':
+            return Response({"detail": "Only clients can view this data."}, status=403)
+
+        # Cancel qilingan orderlar soni
+        cancelled_count = Order.objects.filter(client=user, status="cancel_client").count()
+
+        return Response({
+            "cancelled_by_client": cancelled_count
+        })
+
+
