@@ -133,21 +133,21 @@ def categoryjob_list(request):
 
 
 # worker profilini statistikasi yani nechta odam atmen qilganligi
-class OrderStatisticsAPIView(APIView):
-    permission_classes = [IsAuthenticated]
-
-    def get(self, request, *args, **kwargs):
-        user = request.user
-        total_orders = Order.objects.filter(worker=user).count()
-        success_orders = Order.objects.filter(worker=user, status='success').count()
-        cancel_client_orders = Order.objects.filter(worker=user, status='cancel_client').count()
-
-        # Natijalarni JSON formatida qaytarish
-        return Response({
-            "total_orders": total_orders,
-            "success_orders": success_orders,
-            "cancel_client_orders": cancel_client_orders,
-        })
+# class OrderStatisticsAPIView(APIView):
+#     permission_classes = [IsAuthenticated]
+#
+#     def get(self, request, *args, **kwargs):
+#         user = request.user
+#         total_orders = Order.objects.filter(worker=user).count()
+#         success_orders = Order.objects.filter(worker=user, status='success').count()
+#         cancel_client_orders = Order.objects.filter(worker=user, status='cancel_client').count()
+#
+#         # Natijalarni JSON formatida qaytarish
+#         return Response({
+#             "total_orders": total_orders,
+#             "success_orders": success_orders,
+#             "cancel_client_orders": cancel_client_orders,
+#         })
 
 
 # workerlar har biri o'zini telefon raqamini update qilishshi uchun views
@@ -364,3 +364,31 @@ class UpdateWorkerLocationAPIView(APIView):
             serializer.save()
             return Response({'detail': 'Location updated'}, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class WorkerCancelledByClientStatsView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+
+        if user.role != 'worker':
+            return Response({"detail": "Only workers can view this data."}, status=403)
+
+        # Client tomonidan bekor qilingan orderlar
+        cancelled_by_client_count = Order.objects.filter(
+            accepted_workers=user,
+            status='cancel_client'
+        ).count()
+
+        # Tugallangan (confirm qilingan) orderlar
+        completed_orders_count = Order.objects.filter(
+            accepted_workers=user,
+            finished_workers=user,
+            status='success'
+        ).count()
+
+        return Response({
+            "cancelled_by_client_orders": cancelled_by_client_count,
+            "completed_orders": completed_orders_count
+        })

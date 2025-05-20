@@ -331,13 +331,18 @@ class ClientCancelStatsView(APIView):
             "cancelled_by_client": cancelled_count
         })
 
-
 class AcceptedWorkersView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request, order_id):
+        user = request.user
+
+        # Faqat clientlar kirishi mumkin
+        if user.role != "client":
+            return Response({"detail": "Only clients can access this data."}, status=403)
+
         try:
-            order = Order.objects.get(id=order_id, client=request.user)
+            order = Order.objects.get(id=order_id, client=user)
         except Order.DoesNotExist:
             return Response({"error": "Order not found or access denied"}, status=404)
 

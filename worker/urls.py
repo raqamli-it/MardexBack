@@ -1,8 +1,9 @@
 from django.urls import path
 from .views import WorkerRegistrationView, WorkerLoginView, WorkerPasswordChangeView, \
-    JobListByCategoryView, categoryjob_list, UpdateUserJobView, OrderStatisticsAPIView, \
+    JobListByCategoryView, categoryjob_list, UpdateUserJobView, \
     WorkerProfileUpdateView, AddWorkerImageView, WorkerProfileDetailView, DeleteWorkerImagesView, \
-    WorkerNewsDetailView, WorkerActiveView, WorkerPublicOrdersView, UpdateWorkerLocationAPIView
+    WorkerNewsDetailView, WorkerActiveView, WorkerPublicOrdersView, UpdateWorkerLocationAPIView, \
+    WorkerCancelledByClientStatsView
 from .views import (RegionListByCityView, WorkerJobListView,
                     WorkerPhoneUpdateView, JobSearchAPIView, workernews_list)
 
@@ -20,7 +21,7 @@ urlpatterns = [
     path('user_job/', WorkerJobListView.as_view(), name='user_job'),  # Profilni ko‘rish uchun API
 
     # worker profil uchun statistika yani atmen qilingan joblar soni
-    path('order-statistics/', OrderStatisticsAPIView.as_view(), name='order-statistics'),
+    # path('order-statistics/', OrderStatisticsAPIView.as_view(), name='order-statistics'),
 
     # har bir worker o'zini ro'yxatdan o'tgan raqamini upfate qilishi uchun url
     path('api/worker/update-phone/', WorkerPhoneUpdateView.as_view(), name='worker-update-phone'),
@@ -49,4 +50,7 @@ urlpatterns = [
     # workerni order tarixi
     path("workers/<int:worker_id>/orders/history/", WorkerPublicOrdersView.as_view()),
     path('worker/update-location/', UpdateWorkerLocationAPIView.as_view(), name='update-location'),
+
+    path('orders/worker-cancelled-by-client-stats/', WorkerCancelledByClientStatsView.as_view(), name='worker-cancelled-by-client-stats'),
+
 ]
