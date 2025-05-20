@@ -332,3 +332,15 @@ class ClientCancelStatsView(APIView):
         })
 
 
+class AcceptedWorkersView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, order_id):
+        try:
+            order = Order.objects.get(id=order_id, client=request.user)
+        except Order.DoesNotExist:
+            return Response({"error": "Order not found or access denied"}, status=404)
+
+        accepted_workers = order.accepted_workers.all()
+        serializer = WorkerSerializer(accepted_workers, many=True)
+        return Response(serializer.data)
