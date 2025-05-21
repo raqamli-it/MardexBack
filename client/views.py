@@ -326,9 +326,13 @@ class ClientCancelStatsView(APIView):
 
         # Cancel qilingan orderlar soni
         cancelled_count = Order.objects.filter(client=user, status="cancel_client").count()
+        active_count = Order.objects.filter(client=user, status="in_progress").count()
+        completed_count = Order.objects.filter(client=user, status="success").count()
 
         return Response({
-            "cancelled_by_client": cancelled_count
+            "cancelled_by_client": cancelled_count,
+            "active_orders": active_count,
+            "completed_orders": completed_count
         })
 
 class AcceptedWorkersView(APIView):
