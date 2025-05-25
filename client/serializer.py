@@ -167,11 +167,10 @@ class WorkerProfileSerializer(serializers.ModelSerializer):
 
 
 class ClientNewsSerializer(serializers.ModelSerializer):
-    created_at = serializers.DateTimeField(format='%d-%m-%Y %H:%M')
 
     class Meta:
         model = ClientNews
-        fields = ['id', 'description', 'image', 'created_at', ]
+        fields = ['id', 'description', 'image', ]
 
 
 class ClientTarifSerializer(serializers.ModelSerializer):
