@@ -182,11 +182,10 @@ class RegionSerializer(serializers.ModelSerializer):
 
 
 class WorkerNewsSerializer(serializers.ModelSerializer):
-    created_at = serializers.DateTimeField(format='%Y-%m-%d %H:%M')
 
     class Meta:
         model = WorkerNews
-        fields = ['id', 'description', 'image', 'created_at']
+        fields = ['id', 'description', 'image',]
 
 
 class WorkerImageDeleteSerializer(serializers.Serializer):
