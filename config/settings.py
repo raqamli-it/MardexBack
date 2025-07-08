@@ -150,7 +150,7 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
-SECURE_SSL_REDIRECT = True  # HTTP so'rovlardan avtomatik HTTPS'ga yo'naltiradi
+SECURE_SSL_REDIRECT = True  # HTTP so'rovlardan avtomatik HTTPS'ga yo'naltiradi.
 SESSION_COOKIE_SECURE = True  # Foydalanuvchi sessiyasi faqat HTTPS'da ishlaydi
 CSRF_COOKIE_SECURE = True  # CSRF token faqat HTTPS'da ishlaydi
 
