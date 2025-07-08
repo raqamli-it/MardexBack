@@ -79,6 +79,12 @@ TEMPLATES = [
     },
 ]
 
+
+CSRF_TRUSTED_ORIGINS = [
+    "https://mardex.digitallaboratory.uz"
+]
+
+
 # WSGI_APPLICATION = 'config.wsgi.application'
 ASGI_APPLICATION = 'config.asgi.application'
 
