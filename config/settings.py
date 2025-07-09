@@ -80,9 +80,9 @@ TEMPLATES = [
 ]
 
 
-CSRF_TRUSTED_ORIGINS = [
-    "https://mardex.digitallaboratory.uz"
-]
+# CSRF_TRUSTED_ORIGINS = [
+#     "https://mardex.digitallaboratory.uz"
+# ]
 
 
 # WSGI_APPLICATION = 'config.wsgi.application'
@@ -150,15 +150,15 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
-SECURE_SSL_REDIRECT = True  # HTTP so'rovlardan avtomatik HTTPS'ga yo'naltiradi.
-SESSION_COOKIE_SECURE = True  # Foydalanuvchi sessiyasi faqat HTTPS'da ishlaydi
-CSRF_COOKIE_SECURE = True  # CSRF token faqat HTTPS'da ishlaydi
-
-SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
-
-SECURE_HSTS_SECONDS = 31536000
-SECURE_HSTS_INCLUDE_SUBDOMAINS = True
-SECURE_HSTS_PRELOAD = True
+# SECURE_SSL_REDIRECT = True  # HTTP so'rovlardan avtomatik HTTPS'ga yo'naltiradi.
+# SESSION_COOKIE_SECURE = True  # Foydalanuvchi sessiyasi faqat HTTPS'da ishlaydi
+# CSRF_COOKIE_SECURE = True  # CSRF token faqat HTTPS'da ishlaydi
+#
+# SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+#
+# SECURE_HSTS_SECONDS = 31536000
+# SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+# SECURE_HSTS_PRELOAD = True
 
 
 STATIC_URL = '/static/'
