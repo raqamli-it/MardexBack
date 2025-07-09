@@ -15,7 +15,7 @@ SECRET_KEY = 'django-insecure-sfxtedi$dh=#e!n=#nwmi35^(26o0(z556j5-7d+^%e#n3t6$z
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = ['mardex.digitallaboratory.uz']
 
 # Application definition
 
@@ -177,7 +177,7 @@ AUTH_USER_MODEL = 'users.AbstractUser'
 
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(days=365 * 100),  # 100 yil amal qiladi
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=365 * 100),  # Refresh token ham 100 yil amal qiladi.
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=365 * 100),  # Refresh token ham 100 yil amal qiladi
     'ROTATE_REFRESH_TOKENS': False,
     'BLACKLIST_AFTER_ROTATION': False,
 }
