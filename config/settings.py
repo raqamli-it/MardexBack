@@ -80,9 +80,9 @@ TEMPLATES = [
 ]
 
 
-# CSRF_TRUSTED_ORIGINS = [
-#     "https://mardex.digitallaboratory.uz"
-# ]
+CSRF_TRUSTED_ORIGINS = [
+    "http://mardex.digitallaboratory.uz"
+]
 
 
 # WSGI_APPLICATION = 'config.wsgi.application'
