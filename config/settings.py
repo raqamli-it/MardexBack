@@ -13,7 +13,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-sfxtedi$dh=#e!n=#nwmi35^(26o0(z556j5-7d+^%e#n3t6$z'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
 ALLOWED_HOSTS = ['mardex.digitallaboratory.uz']
 
@@ -81,7 +81,7 @@ TEMPLATES = [
 
 
 CSRF_TRUSTED_ORIGINS = [
-    "http://mardex.digitallaboratory.uz"
+    "https://mardex.digitallaboratory.uz"
 ]
 
 
@@ -150,20 +150,20 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
-# SECURE_SSL_REDIRECT = True  # HTTP so'rovlardan avtomatik HTTPS'ga yo'naltiradi.
-# SESSION_COOKIE_SECURE = True  # Foydalanuvchi sessiyasi faqat HTTPS'da ishlaydi
-# CSRF_COOKIE_SECURE = True  # CSRF token faqat HTTPS'da ishlaydi
-#
-# SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
-#
-# SECURE_HSTS_SECONDS = 31536000
-# SECURE_HSTS_INCLUDE_SUBDOMAINS = True
-# SECURE_HSTS_PRELOAD = True
+SECURE_SSL_REDIRECT = True  # HTTP so'rovlardan avtomatik HTTPS'ga yo'naltiradi.
+SESSION_COOKIE_SECURE = True  # Foydalanuvchi sessiyasi faqat HTTPS'da ishlaydi
+CSRF_COOKIE_SECURE = True  # CSRF token faqat HTTPS'da ishlaydi
+
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+SECURE_HSTS_SECONDS = 31536000
+SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+SECURE_HSTS_PRELOAD = True
 
 
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
-STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static'), ]
+# STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static'), ]
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
