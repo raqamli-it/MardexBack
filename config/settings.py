@@ -177,7 +177,7 @@ AUTH_USER_MODEL = 'users.AbstractUser'
 
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(days=365 * 100),  # 100 yil amal qiladi
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=365 * 100),  # Refresh token ham 100 yil amal qiladi
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=365 * 100),  # Refresh token ham 100 yil amal qiladi.
     'ROTATE_REFRESH_TOKENS': False,
     'BLACKLIST_AFTER_ROTATION': False,
 }
