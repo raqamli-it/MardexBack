@@ -3,21 +3,17 @@ from datetime import timedelta
 from pathlib import Path
 from django.utils.translation import gettext_lazy as _
 
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
-
-# SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'django-insecure-sfxtedi$dh=#e!n=#nwmi35^(26o0(z556j5-7d+^%e#n3t6$z'
-
-# SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
+ALLOWED_HOSTS = ['*']
 
-ALLOWED_HOSTS = ['mardex.digitallaboratory.uz']
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
-# Application definition
+CSRF_TRUSTED_ORIGINS = [
+    "https://mardex.digitallaboratory.uz"
+]
+
 
 INSTALLED_APPS = [
     'daphne',
@@ -80,10 +76,6 @@ TEMPLATES = [
 ]
 
 
-CSRF_TRUSTED_ORIGINS = [
-    "https://mardex.digitallaboratory.uz"
-]
-
 
 # WSGI_APPLICATION = 'config.wsgi.application'
 ASGI_APPLICATION = 'config.asgi.application'
@@ -91,23 +83,23 @@ ASGI_APPLICATION = 'config.asgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.sqlite3',
-#         'NAME': BASE_DIR / 'db.sqlite3',
-#     }
-# }
-
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'mardex',  # PostgreSQL bazasi nomi
-        'USER': 'user_mardex',  # PostgreSQL foydalanuvchi nomi
-        'PASSWORD': 'password_mardex',  # PostgreSQL paroli
-        'HOST': 'mardex_db',  # Docker Compose'dagi konteyner nomi
-        'PORT': '5432',  # PostgreSQL uchun standart port
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
+
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.postgresql',
+#         'NAME': 'mardex',  # PostgreSQL bazasi nomi
+#         'USER': 'user_mardex',  # PostgreSQL foydalanuvchi nomi
+#         'PASSWORD': 'password_mardex',  # PostgreSQL paroli
+#         'HOST': 'mardex_db',  # Docker Compose'dagi konteyner nomi
+#         'PORT': '5432',  # PostgreSQL uchun standart port
+#     }
+# }
 
 
 
@@ -146,19 +138,6 @@ TIME_ZONE = 'Asia/Tashkent'
 USE_I18N = True
 
 USE_TZ = True
-
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/5.1/howto/static-files/
-
-SECURE_SSL_REDIRECT = True  # HTTP so'rovlardan avtomatik HTTPS'ga yo'naltiradi.
-SESSION_COOKIE_SECURE = True  # Foydalanuvchi sessiyasi faqat HTTPS'da ishlaydi
-CSRF_COOKIE_SECURE = True  # CSRF token faqat HTTPS'da ishlaydi
-
-SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
-
-SECURE_HSTS_SECONDS = 31536000
-SECURE_HSTS_INCLUDE_SUBDOMAINS = True
-SECURE_HSTS_PRELOAD = True
 
 
 STATIC_URL = '/static/'
