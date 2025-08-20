@@ -126,13 +126,13 @@ class UserUpdateSerializer(serializers.ModelSerializer):
 class JobCategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = CategoryJob
-        fields = ['id']
+        fields = ['id', 'title_uz', 'title_ru', 'title_en']
 
 
 class JobSerializer(serializers.ModelSerializer):
     class Meta:
         model = Job
-        fields = ['id', 'title']
+        fields = ['id', 'title_uz', 'title_ru', 'title_en']
 
 
 class WorkerJobSerializer(serializers.ModelSerializer):
