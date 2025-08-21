@@ -311,7 +311,8 @@ class WorkerActiveView(APIView):
 
 class WorkerPublicOrdersView(ListAPIView):
     serializer_class = OrderSerializer
-    permission_classes = [AllowAny]  # Token talab qilinmaydi
+    permission_classes = [IsAuthenticated]
+    # permission_classes = [AllowAny]  # Token talab qilinmaydi
 
     def get_queryset(self):
         worker_id = self.kwargs.get("worker_id")
