@@ -1,5 +1,6 @@
 import os
-
+from config import settings
+from django.conf import settings
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models
 from django.utils import timezone
@@ -65,7 +66,7 @@ class AbstractUser(AbstractBaseUser, PermissionsMixin):
     gender = models.CharField(max_length=10, choices=GENDER_CHOICES, default='Male')
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='idle')
     full_name = models.CharField(max_length=255)
-    phone = models.CharField(max_length=15, unique=True)
+    phone = models.CharField(max_length=15)
     region = models.ForeignKey(Region, on_delete=models.CASCADE, null=True, blank=True)
     city = models.ForeignKey(City, on_delete=models.CASCADE, null=True, blank=True)
     # location = models.JSONField(geography=True, blank=True, null=True)
@@ -96,8 +97,8 @@ class AbstractUser(AbstractBaseUser, PermissionsMixin):
 
     objects = UserManager()
 
-    USERNAME_FIELD = 'phone'
-    REQUIRED_FIELDS = ['full_name']
+    USERNAME_FIELD = 'id'
+    REQUIRED_FIELDS = ['phone', 'full_name']
 
     def __str__(self):
         return f"{self.full_name} | {self.phone}"
@@ -106,3 +107,23 @@ class AbstractUser(AbstractBaseUser, PermissionsMixin):
         verbose_name = 'User'
         verbose_name_plural = 'Users'
         ordering = ['created_at']
+        constraints = [
+            models.UniqueConstraint(
+                fields=["phone", "role"],
+                name="unique_phone_role"
+            )
+        ]
+
+
+class WorkerProfile(models.Model):
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="worker_profile")
+
+    def __str__(self):
+        return f"Worker: {self.user.phone}"
+
+
+class ClientProfile(models.Model):
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="client_profile")
+
+    def __str__(self):
+        return f"Client: {self.user.phone}"

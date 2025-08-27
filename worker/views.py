@@ -38,10 +38,12 @@ class WorkerRegistrationView(generics.CreateAPIView):
         worker = serializer.save()
 
         refresh = RefreshToken.for_user(worker)
+        refresh['role'] = worker.role
 
         return Response({
             "refresh": str(refresh),
             "access": str(refresh.access_token),
+            "worker": WorkerRegistrationSerializer(worker).data
         }, status=status.HTTP_201_CREATED)
 
 
@@ -65,6 +67,7 @@ class WorkerLoginView(generics.GenericAPIView):
             "access": str(refresh.access_token),
             "worker": WorkerRegistrationSerializer(worker).data,
         }, status=status.HTTP_200_OK)
+
 
 
 class IsWorker(BasePermission):

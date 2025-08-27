@@ -100,19 +100,22 @@ class ClientRegistrationView(generics.CreateAPIView):
         serializer.is_valid(raise_exception=True)
         client = serializer.save()
 
-        # Assign default tariff
+        # Default tarif biriktirish
         self.assign_default_tarif(client)
 
         refresh = RefreshToken.for_user(client)
+        refresh['role'] = client.role
+
         return Response({
             "refresh": str(refresh),
             "access": str(refresh.access_token),
+            "client": ClientRegistrationSerializer(client).data
         }, status=status.HTTP_201_CREATED)
 
     def assign_default_tarif(self, user):
         default_tarif = ClientTarif.objects.filter(price=0).first()
         if default_tarif:
-            TarifHaridi.objects.get_or_create(user=user, tarif_id=default_tarif)
+            TarifHaridi.objects.get_or_create(user=user, tarif_id=default_tarif, defaults={"status": True})
 
 
 class ClientLoginView(generics.GenericAPIView):
@@ -140,27 +143,19 @@ class ClientLoginView(generics.GenericAPIView):
         }, status=status.HTTP_200_OK)
 
     def get_or_assign_tarif(self, user):
-        """
-        Foydalanuvchining aktiv tarifini olish yoki unga 0 so‘mlik tarifni ulash.
-        """
-        # Foydalanuvchining aktiv tarifini tekshirish
         tarif_haridi = TarifHaridi.objects.filter(user=user, status=True).first()
         if tarif_haridi:
             tarif = tarif_haridi.tarif_id
         else:
-            # 0 so‘mlik tarifni olish
             default_tarif = ClientTarif.objects.filter(price=0).first()
             if not default_tarif:
-                return None  # Agar 0 so‘mlik tarif bo‘lmasa, `None` qaytaramiz
+                return None
 
-            # 0 so‘mlik tarifni foydalanuvchiga bog‘lash
             tarif_haridi, created = TarifHaridi.objects.get_or_create(
                 user=user,
                 tarif_id=default_tarif,
                 defaults={"status": True}
             )
-
-            # Agar yozuv avval mavjud bo‘lsa, statusni yangilaymiz
             if not created:
                 tarif_haridi.status = True
                 tarif_haridi.save()

@@ -1,4 +1,6 @@
 from django.contrib import admin
+
+from users.models import ClientProfile
 from .models import Order, ClientNews, ClientTarif, OrderImage
 
 
@@ -36,3 +38,14 @@ class ClientTarifAdmin(admin.ModelAdmin):
     list_display = ('name', 'price', 'top_limit', 'call_limit')
     fields = ['name', 'price', 'top_limit', 'call_limit',]
     search_fields = ('name',)
+
+
+@admin.register(ClientProfile)
+class ClientProfileAdmin(admin.ModelAdmin):
+    list_display = ("id", "user", "get_phone")
+    search_fields = ("user__phone",)
+    list_filter = ("user__role",)
+
+    def get_phone(self, obj):
+        return obj.user.phone
+    get_phone.short_description = "Phone"

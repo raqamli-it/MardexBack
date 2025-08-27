@@ -1,4 +1,4 @@
-from users.models import AbstractUser
+from users.models import AbstractUser, ClientProfile
 from .models import ClientReyting, OrderImage
 from .models import Order, ClientNews, ClientTarif, TarifHaridi
 
@@ -67,26 +67,37 @@ class ClientRegistrationSerializer(serializers.ModelSerializer):
         model = User
         fields = ['id', 'full_name', 'phone', 'password', 'password_confirmation', 'city', 'region', 'gender']
 
-    def validate(self, data):
-        if data['password'] != data['password_confirmation']:
+    def validate(self, attrs):
+        # Parollarni tekshirish
+        if attrs['password'] != attrs['password_confirmation']:
             raise serializers.ValidationError("Passwords do not match")
-        return data
+
+        # Telefon + client kombinatsiyasi bo‘yicha tekshirish
+        phone = attrs.get("phone")
+        if User.objects.filter(phone=phone, role="client").exists():
+            raise serializers.ValidationError(
+                {"detail": "Bu telefon raqam allaqachon client sifatida ro‘yxatdan o‘tgan."}
+            )
+
+        return attrs
 
     def create(self, validated_data):
         validated_data.pop('password_confirmation')
 
-        client = User(
+        client = User.objects.create_user(
             phone=validated_data['phone'],
             full_name=validated_data['full_name'],
+            password=validated_data['password'],
             region=validated_data.get('region'),
             city=validated_data.get('city'),
             gender=validated_data.get('gender'),
             role="client"
         )
-        client.set_password(validated_data['password'])
-        client.save()
-        return client
 
+        # ClientProfile yaratish
+        ClientProfile.objects.create(user=client)
+
+        return client
 
 class ClientLoginSerializer(serializers.Serializer):
     phone = serializers.CharField()
@@ -96,7 +107,7 @@ class ClientLoginSerializer(serializers.Serializer):
     def validate(self, data):
         phone = data.get("phone")
         password = data.get("password")
-        client = User.objects.filter(phone=phone).first()
+        client = User.objects.filter(phone=phone, role="client").first()
 
         if client and client.check_password(password):
             # 0 so‘mlik tarif faqat mavjud bo‘lmasa, ulash
@@ -127,7 +138,7 @@ class ClientLoginSerializer(serializers.Serializer):
             TarifHaridi.objects.get_or_create(
                 user=user,
                 tarif_id=default_tarif,
-                defaults={"status": True}  # Agar yangi yozuv yaratilsa, status=True o‘rnatiladi
+                defaults={"status": True}
             )
 
 

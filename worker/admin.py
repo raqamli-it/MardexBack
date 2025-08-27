@@ -1,4 +1,6 @@
 from django.contrib import admin
+
+from users.models import WorkerProfile
 from worker.models import WorkerNews, WorkerImage
 from django.contrib.auth import get_user_model
 
@@ -26,3 +28,14 @@ class WorkerNewsAdmin(admin.ModelAdmin):
     list_display = ('created_at', 'description')
     fields = ['description_uz', 'description_ru', 'description_en', 'image',]
     ordering = ('created_at',)
+
+
+@admin.register(WorkerProfile)
+class WorkerProfileAdmin(admin.ModelAdmin):
+    list_display = ("id", "user", "get_phone")
+    search_fields = ("user__phone",)
+    list_filter = ("user__role",)
+
+    def get_phone(self, obj):
+        return obj.user.phone
+    get_phone.short_description = "Phone"

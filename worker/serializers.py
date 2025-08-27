@@ -1,7 +1,7 @@
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
 
-from users.models import AbstractUser
+from users.models import AbstractUser, WorkerProfile
 from job.models import Job, CategoryJob
 from worker.models import WorkerNews, WorkerImage
 from job.models import Region, City
@@ -17,25 +17,36 @@ class WorkerRegistrationSerializer(serializers.ModelSerializer):
         model = User
         fields = ['id', 'full_name', 'phone', 'password', 'password_confirmation', 'region', 'city', 'gender']
 
-    def validate(self, data):
-        if data['password'] != data['password_confirmation']:
+    def validate(self, attrs):
+        # Parollarni tekshirish
+        if attrs['password'] != attrs['password_confirmation']:
             raise serializers.ValidationError("Passwords do not match")
-        return data
+
+        # Telefon + worker kombinatsiyasi bo‘yicha tekshirish
+        phone = attrs.get("phone")
+        if User.objects.filter(phone=phone, role="worker").exists():
+            raise serializers.ValidationError(
+                {"detail": "Bu telefon raqam allaqachon worker sifatida ro‘yxatdan o‘tgan."}
+            )
+
+        return attrs
 
     def create(self, validated_data):
-        # Parol tasdiqlash maydonini o'chirish
         validated_data.pop('password_confirmation')
 
-        worker = User(
+        worker = User.objects.create_user(
             phone=validated_data['phone'],
             full_name=validated_data['full_name'],
+            password=validated_data['password'],
             region=validated_data.get('region'),
             city=validated_data.get('city'),
             gender=validated_data.get('gender'),
             role="worker"
         )
-        worker.set_password(validated_data['password'])
-        worker.save()
+
+        # WorkerProfile yaratish
+        WorkerProfile.objects.create(user=worker)
+
         return worker
 
 
@@ -46,7 +57,7 @@ class WorkerLoginSerializer(serializers.Serializer):
     def validate(self, data):
         phone = data.get("phone")
         password = data.get("password")
-        worker = User.objects.filter(phone=phone).first()
+        worker = User.objects.filter(phone=phone, role="worker").first()
 
         if worker and worker.check_password(password):
             return worker
