@@ -18,7 +18,7 @@ services:
     restart: always
 
   mardex_db:
-    image: postgis/postgis:16-3.4   # ✅ oddiy postgres o‘rniga postgis ishlatyapmiz
+    image: postgis/postgis:17-3.5 # ✅ oddiy postgres o‘rniga postgis ishlatyapmiz
     environment:
       POSTGRES_DB: mardex
       POSTGRES_USER: user_mardex
