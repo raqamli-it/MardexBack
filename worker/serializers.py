@@ -96,11 +96,16 @@ class WorkerImageSerializer(serializers.ModelSerializer):
 
 class WorkerSerializer(serializers.ModelSerializer):
     images = WorkerImageSerializer(source='profileimage', many=True, read_only=True)
+    distance_km = serializers.SerializerMethodField()
 
     class Meta:
         model = AbstractUser
-        fields = ['id', 'full_name', 'phone', 'avatar', 'job_id', 'description', 'reyting', 'images', ]
+        fields = ['id', 'full_name', 'phone', 'avatar', 'job_id', 'description', 'reyting', 'images', 'distance_km']
 
+    def get_distance_km(self, obj):
+        if hasattr(obj, 'distance') and obj.distance:
+            return round(obj.distance.km, 2)
+        return None
 
 class WorkerUpdateSerializer(serializers.ModelSerializer):
     images = WorkerImageSerializer(source='profileimage', many=True, read_only=True)

@@ -282,13 +282,18 @@ class FilteredWorkerListView(generics.ListAPIView):
 
     def get_queryset(self):
         order_id = self.kwargs.get("order_id")
+        min_radius = int(self.request.query_params.get("min_radius", 1))
+        max_radius = int(self.request.query_params.get("max_radius", 30))
+
         try:
             order = Order.objects.get(id=order_id)
-            return get_filtered_workers(order)
+            return get_filtered_workers(
+                order,
+                min_radius_km=min_radius,
+                max_radius_km=max_radius
+            )
         except Order.DoesNotExist:
             return AbstractUser.objects.none()
-
-
 
 class ClientOrderHistoryListView(generics.ListAPIView):
     serializer_class = OrderSerializer

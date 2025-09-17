@@ -17,6 +17,7 @@ CSRF_TRUSTED_ORIGINS = [
 
 INSTALLED_APPS = [
     'daphne',
+    'django.contrib.gis',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -90,16 +91,28 @@ ASGI_APPLICATION = 'config.asgi.application'
 #     }
 # }
 
+
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'mardex',  # PostgreSQL bazasi nomi
-        'USER': 'user_mardex',  # PostgreSQL foydalanuvchi nomi
-        'PASSWORD': 'password_mardex',  # PostgreSQL paroli
-        'HOST': 'mardex_db',  # Docker Compose'dagi konteyner nomi
-        'PORT': '5432',  # PostgreSQL uchun standart port
+        'ENGINE': 'django.contrib.gis.db.backends.postgis',  # ✅ faqat shu joyi o‘zgaradi
+        'NAME': 'mardex',
+        'USER': 'user_mardex',
+        'PASSWORD': 'password_mardex',
+        'HOST': 'mardex_db',
+        'PORT': '5432',
     }
 }
+
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.postgresql',
+#         'NAME': 'mardex',  # PostgreSQL bazasi nomi
+#         'USER': 'user_mardex',  # PostgreSQL foydalanuvchi nomi
+#         'PASSWORD': 'password_mardex',  # PostgreSQL paroli
+#         'HOST': 'mardex_db',  # Docker Compose'dagi konteyner nomi
+#         'PORT': '5432',  # PostgreSQL uchun standart port
+#     }
+# }
 
 
 
@@ -172,3 +185,8 @@ CHANNEL_LAYERS = {
         },
     },
 }
+
+# workerlarni topishda km ni sozlash
+NEAREST_WORKER_MIN_RADIUS_KM = 1
+NEAREST_WORKER_MAX_RADIUS_KM = 30
+NEAREST_WORKER_MAX_RESULTS = 20

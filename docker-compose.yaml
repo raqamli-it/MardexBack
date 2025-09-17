@@ -18,7 +18,7 @@ services:
     restart: always
 
   mardex_db:
-    image: postgres:latest
+    image: postgis/postgis:16-3.4   # ✅ oddiy postgres o‘rniga postgis ishlatyapmiz
     environment:
       POSTGRES_DB: mardex
       POSTGRES_USER: user_mardex
@@ -28,7 +28,6 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     restart: always
-
 
   redis:
     image: redis:alpine
@@ -43,3 +42,56 @@ volumes:
   static_volume:
   media_volume:
   redis_data:
+
+
+
+
+
+
+
+
+#version: '3'
+#
+#services:
+#  web:
+#    build: .
+#    env_file:
+#      - .env
+#    command: sh -c "python manage.py migrate && daphne -b 0.0.0.0 -p 8000 config.asgi:application"
+#    volumes:
+#      - .:/Mardex
+#      - static_volume:/Mardex/staticfiles
+#      - media_volume:/Mardex/mediafiles
+#    ports:
+#      - "8021:8000"
+#    depends_on:
+#      - mardex_db
+#      - redis
+#    restart: always
+#
+#  mardex_db:
+#    image: postgres:latest
+#    environment:
+#      POSTGRES_DB: mardex
+#      POSTGRES_USER: user_mardex
+#      POSTGRES_PASSWORD: password_mardex
+#    ports:
+#      - "5436:5432"
+#    volumes:
+#      - postgres_data:/var/lib/postgresql/data
+#    restart: always
+#
+#
+#  redis:
+#    image: redis:alpine
+#    ports:
+#      - "6372:6379"
+#    volumes:
+#      - redis_data:/data
+#    restart: always
+#
+#volumes:
+#  postgres_data:
+#  static_volume:
+#  media_volume:
+#  redis_data:

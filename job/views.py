@@ -1,7 +1,9 @@
+from django.conf import settings
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework.views import APIView
-
+from django.contrib.gis.geos import Point
+from django.contrib.gis.db.models.functions import Distance
 from users.models import AbstractUser
 from .models import CategoryJob, Job, City, Region
 from .serializer import CategoryJobSerializer, JobSerializer, CitySerializer, RegionSerializer
@@ -83,24 +85,38 @@ class RegionListByCityView(APIView):
         return Response(result)
 
 
-def get_filtered_workers(order):
-    """ Orderga mos workerlarni filter qilish """
 
-    # Umumiy job_category va region bo‘yicha workerlarni olamiz
+
+def get_filtered_workers(order, min_radius_km=None, max_radius_km=None):
+    """
+    Orderga mos workerlarni filter qilib,
+    PostGIS yordamida eng yaqin workerlarni qaytaradi.
+    """
+
+    # Agar parametrlar kelsa ulardan foydalansin, kelmasa settings.py dagi defaultni olsin
+    min_radius_km = min_radius_km or getattr(settings, "NEAREST_WORKER_MIN_RADIUS_KM", 1)
+    max_radius_km = max_radius_km or getattr(settings, "NEAREST_WORKER_MAX_RADIUS_KM", 30)
+    max_results = getattr(settings, "NEAREST_WORKER_MAX_RESULTS", 20)
+
     workers = AbstractUser.objects.filter(
         role='worker',
         status='idle',
         job_category=order.job_category,
         region=order.region,
         city=order.city,
-        is_worker_active=True
+        is_worker_active=True,
+        location__isnull=False
     )
 
-    #  Agar orderda aniq job-lar belgilangan bo‘lsa, ular bo‘yicha ham filterlaymiz
     if order.job_id.exists():
         workers = workers.filter(job_id__in=order.job_id.all()).distinct()
 
     if order.gender:
         workers = workers.filter(gender=order.gender)
 
-    return workers
+    return workers.annotate(
+        distance=Distance('location', order.location)
+    ).filter(
+        distance__gte=min_radius_km * 1000,
+        distance__lte=max_radius_km * 1000
+    ).order_by('distance')[:max_results]

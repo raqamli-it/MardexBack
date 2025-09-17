@@ -1,11 +1,10 @@
 import os
-from config import settings
+from django.contrib.gis.db import models as gis_models
 from django.conf import settings
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models
 from django.utils import timezone
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
-
 from job.models import Region, City, CategoryJob, Job
 
 
@@ -69,7 +68,7 @@ class AbstractUser(AbstractBaseUser, PermissionsMixin):
     phone = models.CharField(max_length=15)
     region = models.ForeignKey(Region, on_delete=models.CASCADE, null=True, blank=True)
     city = models.ForeignKey(City, on_delete=models.CASCADE, null=True, blank=True)
-    # location = models.JSONField(geography=True, blank=True, null=True)
+    location = gis_models.PointField(geography=True, null=True, blank=True)
     passport_scan = models.ImageField(upload_to=image_create_time, blank=True, null=True)
     passport_back_scan = models.ImageField(upload_to=image_create_time, blank=True, null=True)
     passport_scan_with_face = models.ImageField(upload_to=image_create_time, blank=True, null=True)
