@@ -50,6 +50,9 @@ class OrderSerializer(serializers.ModelSerializer):
 
         lat = validated_data.get("latitude")
         lon = validated_data.get("longitude")
+        print("DEBUG LAT:", lat, type(lat))
+        print("DEBUG LON:", lon, type(lon))
+
         if lat is not None and lon is not None:
             try:
                 # string bolsa floatga o'tkazamiz
