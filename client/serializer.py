@@ -50,9 +50,15 @@ class OrderSerializer(serializers.ModelSerializer):
 
         lat = validated_data.get("latitude")
         lon = validated_data.get("longitude")
-        if lat and lon:
-            # ⚠️ GeoDjango Point → (longitude, latitude)
-            validated_data["location"] = Point(lon, lat)
+        if lat is not None and lon is not None:
+            try:
+                # string bolsa floatga o'tkazamiz
+                lat = float(lat)
+                lon = float(lon)
+                # ⚠️ GeoDjango Point → (longitude, latitude) tartibida
+                validated_data['location'] = Point(lon, lat)
+            except (TypeError, ValueError):
+                raise serializers.ValidationError({"location": "Latitude yoki longitude noto‘g‘ri formatda"})
 
         order = Order.objects.create(**validated_data)
 
