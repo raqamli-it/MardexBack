@@ -27,8 +27,7 @@ class OrderSerializer(serializers.ModelSerializer):
         required=False
     )
     client_info = ClientInfoSerializer(source='client', read_only=True)  # Qo‘shildi
-    created_at = serializers.DateTimeField(format="%Y-%m-%d")
-
+    created_at = serializers.DateTimeField(format="%Y-%m-%d", read_only=True)
 
     class Meta:
         model = Order
