@@ -1,3 +1,5 @@
+from django.contrib.gis.geos import Point
+
 from users.models import AbstractUser, ClientProfile
 from .models import ClientReyting, OrderImage
 from .models import Order, ClientNews, ClientTarif, TarifHaridi
@@ -42,9 +44,16 @@ class OrderSerializer(serializers.ModelSerializer):
         return data
 
     def create(self, validated_data):
-        image_files = validated_data.pop('image', [])  # yangi fayllar
+        image_files = validated_data.pop('image', [])
         job_ids = validated_data.pop('job_id', [])
         validated_data['client'] = self.context['request'].user
+
+        lat = validated_data.get("latitude")
+        lon = validated_data.get("longitude")
+
+        if lat and lon:
+            validated_data["location"] = Point(lon,
+                                               lat)  # ⚠️ Eslatma: GeoDjango `Point(x, y)` → `Point(longitude, latitude)`
 
         order = Order.objects.create(**validated_data)
 
@@ -55,7 +64,6 @@ class OrderSerializer(serializers.ModelSerializer):
             OrderImage.objects.create(order=order, image=img)
 
         return order
-
 
 
 class ClientRegistrationSerializer(serializers.ModelSerializer):
