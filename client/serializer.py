@@ -50,10 +50,9 @@ class OrderSerializer(serializers.ModelSerializer):
 
         lat = validated_data.get("latitude")
         lon = validated_data.get("longitude")
-
         if lat and lon:
-            validated_data["location"] = Point(lon,
-                                               lat)  # ⚠️ Eslatma: GeoDjango `Point(x, y)` → `Point(longitude, latitude)`
+            # ⚠️ GeoDjango Point → (longitude, latitude)
+            validated_data["location"] = Point(lon, lat)
 
         order = Order.objects.create(**validated_data)
 
