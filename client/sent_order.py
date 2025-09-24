@@ -36,6 +36,7 @@ class SendOrderToSelectedWorkersView(APIView):
                         "order": OrderSerializer(order).data
                     }
                 )
+                print(f"📢 Order {order.id} yuborildi -> worker_{worker.id}")  # <<< qo‘shing
 
                 order.notified_workers.add(worker)
                 order.save()
