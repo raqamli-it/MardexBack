@@ -26,7 +26,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
 
     # kutubxonalar
-    "channels",
+    # "channels",
     'modeltranslation',
     'rest_framework',
     'rest_framework_simplejwt',
