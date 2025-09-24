@@ -24,9 +24,10 @@ class UserOrderConsumer(AsyncWebsocketConsumer):
 
         if path.startswith("/ws/worker/") and user_role == "worker":
             self.room_group_name = f"worker_{user.id}"
-            # print(self.room_group_name)
+            print("✅ Worker qo‘shildi:", self.room_group_name)   # <<< shu yerga qo‘shasiz
         elif path.startswith("/ws/clients/") and user_role == "client":
             self.room_group_name = f"client_{user.id}"
+            print("✅ Client qo‘shildi:", self.room_group_name)   # <<< bu yerga ham
         else:
             await self.close()
             return
