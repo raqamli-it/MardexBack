@@ -42,6 +42,7 @@ class UserOrderConsumer(AsyncWebsocketConsumer):
         await self.send(text_data=json.dumps(event))
 
     async def send_order_notification(self, event):
+        print("🔔 Worker consumer event keldi:", event)  # <-- test
         await self.send(text_data=json.dumps(event))
 
 
