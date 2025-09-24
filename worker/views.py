@@ -378,7 +378,7 @@ class UpdateWorkerLocationAPIView(APIView):
 
                 print(f"📍 Worker {request.user.id} location updated -> "
                       f"latitude: {lat}, longitude: {lon}, point: {request.user.location}")
-
+    
             return Response({'detail': 'Location updated'}, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
