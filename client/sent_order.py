@@ -24,7 +24,7 @@ class SendOrderToSelectedWorkersView(APIView):
                 return Response({"detail": "Siz ushbu order egasi emassiz!"}, status=403)
 
             eligible_workers = get_filtered_workers(order)
-            workers = eligible_workers.filter(id__in=worker_ids)
+            workers = eligible_workers.filter(id__in=worker_ids)[:20]
 
             channel_layer = get_channel_layer()
 

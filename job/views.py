@@ -96,7 +96,6 @@ def get_filtered_workers(order, min_radius_km=None, max_radius_km=None):
     # Agar parametrlar kelsa ulardan foydalansin, kelmasa settings.py dagi defaultni olsin
     min_radius_km = min_radius_km or getattr(settings, "NEAREST_WORKER_MIN_RADIUS_KM", 1)
     max_radius_km = max_radius_km or getattr(settings, "NEAREST_WORKER_MAX_RADIUS_KM", 30)
-    max_results = getattr(settings, "NEAREST_WORKER_MAX_RESULTS", 20)
 
     workers = AbstractUser.objects.filter(
         role='worker',
@@ -119,4 +118,4 @@ def get_filtered_workers(order, min_radius_km=None, max_radius_km=None):
     ).filter(
         distance__gte=min_radius_km * 1000,
         distance__lte=max_radius_km * 1000
-    ).order_by('distance')[:max_results]
+    ).order_by('distance')
