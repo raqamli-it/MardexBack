@@ -96,6 +96,39 @@ def get_filtered_workers(order, min_radius_km=None, max_radius_km=None):
     # Agar parametrlar kelsa ulardan foydalansin, kelmasa settings.py dagi defaultni olsin
     min_radius_km = min_radius_km or getattr(settings, "NEAREST_WORKER_MIN_RADIUS_KM", 1)
     max_radius_km = max_radius_km or getattr(settings, "NEAREST_WORKER_MAX_RADIUS_KM", 30)
+    workers = AbstractUser.objects.filter(role='worker')
+    print("🔎 Boshlang‘ich workerlar soni:", workers.count())
+
+    workers = workers.filter(status='idle')
+    print("🔎 idle workerlar:", workers.count())
+
+    workers = workers.filter(job_category=order.job_category)
+    print("🔎 job_category bo‘yicha:", workers.count())
+
+    workers = workers.filter(region=order.region, city=order.city)
+    print("🔎 region/city bo‘yicha:", workers.count())
+
+    workers = workers.filter(is_worker_active=True, location__isnull=False)
+    print("🔎 location mavjud bo‘lganlar:", workers.count())
+
+    if order.job_id.exists():
+        workers = workers.filter(job_id__in=order.job_id.all()).distinct()
+        print("🔎 job_id bo‘yicha:", workers.count())
+
+    if order.gender:
+        workers = workers.filter(gender=order.gender)
+        print("🔎 gender bo‘yicha:", workers.count())
+
+    workers = workers.annotate(
+        distance=Distance('location', order.location)
+    ).filter(
+        distance__gte=min_radius_km * 1000,
+        distance__lte=max_radius_km * 1000
+    ).order_by('distance')
+
+    print("✅ Yakuniy workerlar:", workers.count())
+    return workers
+
 
     workers = AbstractUser.objects.filter(
         role='worker',
