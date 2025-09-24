@@ -16,7 +16,7 @@ CSRF_TRUSTED_ORIGINS = [
 
 
 INSTALLED_APPS = [
-    # 'daphne',
+    'daphne',
     'django.contrib.gis',
     'django.contrib.admin',
     'django.contrib.auth',
@@ -26,7 +26,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
 
     # kutubxonalar
-    # "channels",
+    "channels",
     'modeltranslation',
     'rest_framework',
     'rest_framework_simplejwt',
