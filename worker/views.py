@@ -359,6 +359,8 @@ class WorkerPublicOrdersView(ListAPIView):
 #         return Response(serializer.data)
 
 
+from django.contrib.gis.geos import Point
+
 class UpdateWorkerLocationAPIView(APIView):
     permission_classes = [IsWorker]
 
@@ -366,6 +368,17 @@ class UpdateWorkerLocationAPIView(APIView):
         serializer = WorkerLocationUpdateSerializer(request.user, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
+
+            # ✅ Point maydonini ham saqlash
+            lat = request.user.latitude
+            lon = request.user.longitude
+            if lat and lon:
+                request.user.location = Point(float(lon), float(lat))  # GeoDjango (lon, lat)
+                request.user.save(update_fields=["location"])
+
+                print(f"📍 Worker {request.user.id} location updated -> "
+                      f"latitude: {lat}, longitude: {lon}, point: {request.user.location}")
+
             return Response({'detail': 'Location updated'}, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
