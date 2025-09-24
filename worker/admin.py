@@ -14,12 +14,27 @@ class WorkerImageInline(admin.TabularInline):
 
 @admin.register(User)
 class ProfileAdmin(admin.ModelAdmin):
-    list_display = ['id', 'full_name', 'status', 'role', 'gender', 'phone', 'is_superuser']
+    list_display = [
+        'id', 'full_name', 'status', 'role', 'gender',
+        'phone', 'is_superuser', 'show_location'
+    ]
     list_filter = ['role', 'gender', 'region', 'city']
-    search_fields = ['id', 'full_name_uz', 'phone',]
-    fields = ['full_name_uz', 'full_name_ru', 'full_name_en',
-              'description_uz', 'description_ru', 'description_en',
-              'role', 'gender', 'latitude', 'longitude', 'location', 'status', 'is_worker_active',]
+    search_fields = ['id', 'full_name_uz', 'phone']
+
+    def show_location(self, obj):
+        if obj.location:
+            return obj.location.wkt   # SRID=4326;POINT (69.2401 41.2995)
+        return "-"
+    show_location.short_description = "Location (WKT)"
+
+    fields = [
+        'full_name_uz', 'full_name_ru', 'full_name_en',
+        'description_uz', 'description_ru', 'description_en',
+        'role', 'gender', 'latitude', 'longitude',
+        'location', 'show_location',   # 👈 qo‘shildi
+        'status', 'is_worker_active',
+    ]
+    readonly_fields = ['show_location']   # 👈 faqat o‘qish uchun
     inlines = [WorkerImageInline]
 
 
