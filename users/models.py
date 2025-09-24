@@ -1,6 +1,7 @@
 import os
 from django.contrib.gis.db import models as gis_models
 from django.conf import settings
+from django.contrib.gis.geos import Point
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models
 from django.utils import timezone
@@ -90,7 +91,7 @@ class AbstractUser(AbstractBaseUser, PermissionsMixin):
     is_worker_active = models.BooleanField(default=True)
     is_online = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
-    point = gis_models.PointField(geography=True)
+    point = gis_models.PointField(geography=True, default=Point(41.2995, 69.2401))
     # latitude = models.DecimalField(max_digits=9, decimal_places=6, blank=True, null=True)
     # longitude = models.DecimalField(max_digits=9, decimal_places=6, blank=True, null=True)
 
