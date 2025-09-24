@@ -235,7 +235,7 @@ class WorkerActiveSerializer(serializers.ModelSerializer):
 class WorkerLocationUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['latitude', 'longitude']
+        fields = ['point']
 
     def validate(self, attrs):
         if self.instance.role != "worker":

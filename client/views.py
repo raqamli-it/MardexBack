@@ -38,15 +38,21 @@ class OrderCreateView(generics.CreateAPIView):
         """Order yaratish va filterlangan workerlarni qaytarish"""
         self.order = serializer.save(client=self.request.user)
         self.eligible_workers = get_filtered_workers(self.order)
-        # print("✅ Order yaratildi:", self.order.id)
-        # print("✅ Eligible workers:", list(self.eligible_workers.values_list("id", flat=True)))
 
     def create(self, request, *args, **kwargs):
         """Overriding to return custom response"""
         response = super().create(request, *args, **kwargs)
 
-        workers_data = [
-            {
+        workers_data = []
+        for w in self.eligible_workers:
+            worker_point = None
+            if w.point:
+                worker_point = {
+                    "type": "Point",
+                    "coordinates": [w.point.x, w.point.y]  # x=lon, y=lat
+                }
+
+            workers_data.append({
                 "id": w.id,
                 "full_name": w.full_name,
                 "avatar": w.avatar.url if w.avatar else None,
@@ -54,15 +60,15 @@ class OrderCreateView(generics.CreateAPIView):
                 "description": w.description,
                 "reyting": w.reyting,
                 "phone": w.phone,
-                "latitude": w.latitude,
-                "longitude": w.longitude,
+                "point": worker_point,  #  endi faqat point qaytadi
                 "images": [
-                    {"id": img.id, "image": img.image.url if img.image else None}
-                    for img in WorkerImage.objects.filter(user=w)  # WorkerImage dan olish
+                    {
+                        "id": img.id,
+                        "image": img.image.url if img.image else None
+                    }
+                    for img in WorkerImage.objects.filter(user=w)
                 ]
-            }
-            for w in self.eligible_workers
-        ]
+            })
 
         return Response({
             "detail": "Order muvaffaqiyatli yaratildi!",

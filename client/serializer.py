@@ -22,20 +22,22 @@ class ClientInfoSerializer(serializers.ModelSerializer):
 
 
 class OrderSerializer(serializers.ModelSerializer):
-    images = OrderImageSerializer(many=True, read_only=True)  # natijani ko'rsatish uchun
-    image = serializers.ListField(                     # yuklash uchun
+    images = OrderImageSerializer(many=True, read_only=True)  # natijani ko‘rsatish uchun
+    image = serializers.ListField(  # yuklash uchun
         child=serializers.ImageField(),
         write_only=True,
         required=False
     )
-    client_info = ClientInfoSerializer(source='client', read_only=True)  # Qo‘shildi
+    client_info = ClientInfoSerializer(source='client', read_only=True)  # qo‘shildi
     created_at = serializers.DateTimeField(format="%Y-%m-%d", read_only=True)
 
     class Meta:
         model = Order
-        fields = ['id', 'job_category', 'job_id', 'desc', 'price', 'full_desc',
-                  'region', 'city', 'gender', 'worker_count',
-                  'latitude', 'longitude', 'images', 'image', 'client_info', 'created_at', 'status',]
+        fields = [
+            'id', 'job_category', 'job_id', 'desc', 'price', 'full_desc',
+            'region', 'city', 'gender', 'worker_count',
+            'point', 'images', 'image', 'client_info', 'created_at', 'status',
+        ]
 
     def validate(self, data):
         request = self.context['request']
@@ -48,31 +50,22 @@ class OrderSerializer(serializers.ModelSerializer):
         job_ids = validated_data.pop('job_id', [])
         validated_data['client'] = self.context['request'].user
 
-        lat = validated_data.get("latitude")
-        lon = validated_data.get("longitude")
-        # print("DEBUG LAT:", lat, type(lat))
-        # print("DEBUG LON:", lon, type(lon))
+        #  faqat point ishlatamiz
+        point = validated_data.get("point")
+        if not point:
+            raise serializers.ValidationError({"point": "Order uchun joylashuv (point) majburiy."})
 
-        if lat is not None and lon is not None:
-            try:
-                # string bolsa floatga o'tkazamiz
-                lat = float(lat)
-                lon = float(lon)
-                # ⚠️ GeoDjango Point → (longitude, latitude) tartibida
-                validated_data['location'] = Point(lon, lat)
-            except (TypeError, ValueError):
-                raise serializers.ValidationError({"location": "Latitude yoki longitude noto‘g‘ri formatda"})
-
+        # order yaratamiz
         order = Order.objects.create(**validated_data)
 
         if job_ids:
             order.job_id.set(job_ids)
 
+        # faqat 5 ta rasm yuklashga ruxsat
         for img in image_files[:5]:
             OrderImage.objects.create(order=order, image=img)
 
         return order
-
 
 class ClientRegistrationSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)

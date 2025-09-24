@@ -19,7 +19,7 @@ class ProfileAdmin(admin.ModelAdmin):
     search_fields = ['id', 'full_name_uz', 'phone',]
     fields = ['full_name_uz', 'full_name_ru', 'full_name_en',
               'description_uz', 'description_ru', 'description_en',
-              'role', 'gender', 'latitude', 'longitude', 'status', 'is_worker_active',]
+              'role', 'gender', 'point', 'status', 'is_worker_active',]
     inlines = [WorkerImageInline]
 
 

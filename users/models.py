@@ -68,7 +68,6 @@ class AbstractUser(AbstractBaseUser, PermissionsMixin):
     phone = models.CharField(max_length=15)
     region = models.ForeignKey(Region, on_delete=models.CASCADE, null=True, blank=True)
     city = models.ForeignKey(City, on_delete=models.CASCADE, null=True, blank=True)
-    location = gis_models.PointField(geography=True, null=True, blank=True)
     passport_scan = models.ImageField(upload_to=image_create_time, blank=True, null=True)
     passport_back_scan = models.ImageField(upload_to=image_create_time, blank=True, null=True)
     passport_scan_with_face = models.ImageField(upload_to=image_create_time, blank=True, null=True)
@@ -91,8 +90,9 @@ class AbstractUser(AbstractBaseUser, PermissionsMixin):
     is_worker_active = models.BooleanField(default=True)
     is_online = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
-    latitude = models.DecimalField(max_digits=9, decimal_places=6, blank=True, null=True)
-    longitude = models.DecimalField(max_digits=9, decimal_places=6, blank=True, null=True)
+    point = gis_models.PointField(geography=True)
+    # latitude = models.DecimalField(max_digits=9, decimal_places=6, blank=True, null=True)
+    # longitude = models.DecimalField(max_digits=9, decimal_places=6, blank=True, null=True)
 
     objects = UserManager()
 

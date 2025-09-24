@@ -365,22 +365,29 @@ class UpdateWorkerLocationAPIView(APIView):
     permission_classes = [IsWorker]
 
     def post(self, request, *args, **kwargs):
-        serializer = WorkerLocationUpdateSerializer(request.user, data=request.data, partial=True)
-        if serializer.is_valid():
-            serializer.save()
+        lon = request.data.get("longitude")
+        lat = request.data.get("latitude")
 
-            # ✅ Point maydonini ham saqlash
-            lat = request.user.latitude
-            lon = request.user.longitude
-            if lat and lon:
-                request.user.location = Point(float(lon), float(lat))  # GeoDjango (lon, lat)
-                request.user.save(update_fields=["location"])
+        if not lon or not lat:
+            return Response(
+                {"detail": "longitude va latitude yuborilishi kerak"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
-                print(f"📍 Worker {request.user.id} location updated -> "
-                      f"latitude: {lat}, longitude: {lon}, point: {request.user.location}")
-    
-            return Response({'detail': 'Location updated'}, status=status.HTTP_200_OK)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            lon = float(lon)
+            lat = float(lat)
+        except ValueError:
+            return Response(
+                {"detail": "longitude va latitude son bo‘lishi kerak"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # ✅ PointField yangilash
+        request.user.point = Point(lon, lat)
+        request.user.save(update_fields=["point"])
+
+        return Response({"detail": "Location updated"}, status=status.HTTP_200_OK)
 
 
 class WorkerCancelledByClientStatsView(APIView):
