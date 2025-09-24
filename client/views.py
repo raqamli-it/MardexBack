@@ -38,6 +38,8 @@ class OrderCreateView(generics.CreateAPIView):
         """Order yaratish va filterlangan workerlarni qaytarish"""
         self.order = serializer.save(client=self.request.user)
         self.eligible_workers = get_filtered_workers(self.order)
+        print("✅ Order yaratildi:", self.order.id)
+        print("✅ Eligible workers:", list(self.eligible_workers.values_list("id", flat=True)))
 
     def create(self, request, *args, **kwargs):
         """Overriding to return custom response"""
