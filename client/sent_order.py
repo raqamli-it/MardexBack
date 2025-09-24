@@ -36,7 +36,7 @@ class SendOrderToSelectedWorkersView(APIView):
                         "order": OrderSerializer(order).data
                     }
                 )
-                print(f"📢 Order {order.id} yuborildi -> worker_{worker.id}")  # <<< qo‘shing
+                # print(f" Order {order.id} yuborildi -> worker_{worker.id}")  # <<< qo‘shing
 
                 order.notified_workers.add(worker)
                 order.save()
@@ -67,4 +67,4 @@ async def auto_remove_worker(order, worker, timeout=60):
             order.status = 'stable'
             await sync_to_async(order.save)()
 
-        print(f"Sending timeout notification to client ID: {order.client.id} for worker: {worker.full_name}")
+        # print(f"Sending timeout notification to client ID: {order.client.id} for worker: {worker.full_name}")
