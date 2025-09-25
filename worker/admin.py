@@ -2,8 +2,11 @@ from django.contrib import admin
 
 from users.models import WorkerProfile
 from worker.models import WorkerNews, WorkerImage
-from django.contrib.auth import get_user_model
+from django.contrib.auth import get_user_model, forms
 from django.contrib.gis.admin import OSMGeoAdmin
+from django import forms
+from django.contrib.gis.db import models as gis_models
+
 
 User = get_user_model()
 
@@ -22,10 +25,17 @@ class ProfileAdmin(OSMGeoAdmin):  # GIS xarita widgeti uchun OSMGeoAdmin ishlata
               'description_uz', 'description_ru', 'description_en',
               'role', 'gender', 'point', 'status', 'is_worker_active']
     inlines = [WorkerImageInline]
+    # Xarita o'lchamlari
+    map_width = 1000  # kengligi px
+    map_height = 600  # balandligi px
     default_lon = 69.2401
     default_lat = 41.3111
-    default_zoom = 20  # map boshlang‘ich zoom darajasi
+    default_zoom = 15
 
+    # Lat/Lon kiritish uchun input maydonlari
+    formfield_overrides = {
+        gis_models.PointField: {"widget": forms.TextInput(attrs={"placeholder": "lat, lon"})},
+    }
 @admin.register(WorkerNews)
 class WorkerNewsAdmin(admin.ModelAdmin):
     list_display = ('created_at', 'description')
