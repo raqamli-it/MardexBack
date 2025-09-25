@@ -14,6 +14,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libpq-dev \
     gdal-bin \
     libgdal-dev \
+    libgeos-dev \
+    proj-bin \
+    proj-data \
     && rm -rf /var/lib/apt/lists/*
 
 # Install Python dependencies
