@@ -26,8 +26,8 @@ class ProfileAdmin(OSMGeoAdmin):  # GIS xarita widgeti uchun OSMGeoAdmin ishlata
               'role', 'gender', 'point', 'status', 'is_worker_active']
     inlines = [WorkerImageInline]
     # Xarita o'lchamlari
-    map_width = 10000  # kengligi px
-    map_height = 400  # balandligi px
+    map_width = 1100 # kengligi px
+    map_height = 600  # balandligi px
     default_lon = 69.2795532482657
     default_lat = 41.31127689979969
     default_zoom = 15
