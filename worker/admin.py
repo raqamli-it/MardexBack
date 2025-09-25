@@ -3,6 +3,7 @@ from django.contrib import admin
 from users.models import WorkerProfile
 from worker.models import WorkerNews, WorkerImage
 from django.contrib.auth import get_user_model
+from django.contrib.gis.admin import OSMGeoAdmin
 
 User = get_user_model()
 
@@ -13,7 +14,7 @@ class WorkerImageInline(admin.TabularInline):
 
 
 @admin.register(User)
-class ProfileAdmin(admin.ModelAdmin):  # GIS xarita widgeti uchun OSMGeoAdmin ishlatamiz
+class ProfileAdmin(OSMGeoAdmin):  # GIS xarita widgeti uchun OSMGeoAdmin ishlatamiz
     list_display = ['id', 'full_name', 'status', 'role', 'gender', 'phone', 'is_superuser']
     list_filter = ['role', 'gender', 'region', 'city']
     search_fields = ['id', 'full_name_uz', 'phone']
