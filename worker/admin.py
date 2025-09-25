@@ -22,8 +22,9 @@ class ProfileAdmin(OSMGeoAdmin):  # GIS xarita widgeti uchun OSMGeoAdmin ishlata
               'description_uz', 'description_ru', 'description_en',
               'role', 'gender', 'point', 'status', 'is_worker_active']
     inlines = [WorkerImageInline]
-
-    default_zoom = 12  # map boshlang‘ich zoom darajasi
+    default_lon = 69.2401
+    default_lat = 41.3111
+    default_zoom = 20  # map boshlang‘ich zoom darajasi
 
 @admin.register(WorkerNews)
 class WorkerNewsAdmin(admin.ModelAdmin):
