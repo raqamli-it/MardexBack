@@ -31,8 +31,6 @@ class ProfileAdmin(OSMGeoAdmin):  # GIS xarita widgeti uchun OSMGeoAdmin ishlata
     default_lat = 41.311081
     default_lon = 69.279759
     default_zoom = 15
-    # Shuni teskari qilib yubor
-    map.setView([default_lon, default_lat], 15)
 
     # Lat/Lon kiritish uchun input maydonlari
     formfield_overrides = {
