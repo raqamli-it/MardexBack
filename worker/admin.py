@@ -13,15 +13,16 @@ class WorkerImageInline(admin.TabularInline):
 
 
 @admin.register(User)
-class ProfileAdmin(admin.ModelAdmin):
+class ProfileAdmin(admin.ModelAdmin):  # GIS xarita widgeti uchun OSMGeoAdmin ishlatamiz
     list_display = ['id', 'full_name', 'status', 'role', 'gender', 'phone', 'is_superuser']
     list_filter = ['role', 'gender', 'region', 'city']
-    search_fields = ['id', 'full_name_uz', 'phone',]
+    search_fields = ['id', 'full_name_uz', 'phone']
     fields = ['full_name_uz', 'full_name_ru', 'full_name_en',
               'description_uz', 'description_ru', 'description_en',
-              'role', 'gender', 'point', 'status', 'is_worker_active',]
+              'role', 'gender', 'point', 'status', 'is_worker_active']
     inlines = [WorkerImageInline]
 
+    default_zoom = 12  # map boshlang‘ich zoom darajasi
 
 @admin.register(WorkerNews)
 class WorkerNewsAdmin(admin.ModelAdmin):
