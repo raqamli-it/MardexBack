@@ -18,7 +18,7 @@ services:
     restart: always
 
   mardex_db:
-    image: postgis/postgis:17-3.5 # ✅ oddiy postgres o‘rniga postgis ishlatyapmiz
+    image: postgis/postgis:17-3.5
     environment:
       POSTGRES_DB: mardex
       POSTGRES_USER: user_mardex
@@ -29,7 +29,7 @@ services:
       - postgres_data:/var/lib/postgresql/data
     restart: always
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U postgres_user -d mardex" ]
+      test: [ "CMD-SHELL", "pg_isready -U user_mardex -d mardex" ]
       interval: 10s
       timeout: 5s
       retries: 3
