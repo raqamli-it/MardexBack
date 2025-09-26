@@ -39,6 +39,12 @@ class OrderAdmin(gis_admin.OSMGeoAdmin):  # OSMGeoAdmin ishlatamiz
         gis_models.PointField: {"widget": forms.TextInput(attrs={"placeholder": "lat, lon"})},
     }
 
+    def get_map_widget(self, db_field, **kwargs):
+        widget = super().get_map_widget(db_field, **kwargs)
+        widget.params['default_lon'] = 69.279759
+        widget.params['default_lat'] = 41.311081
+        widget.params['default_zoom'] = 12
+        return widget
 
 
 @admin.register(ClientNews)
