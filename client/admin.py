@@ -30,8 +30,6 @@ class OrderAdmin(gis_admin.OSMGeoAdmin):  # OSMGeoAdmin ishlatamiz
     # Xarita o‘lchamlari
     map_width = 1100
     map_height = 600
-    default_lon = 69.279759  # longitude
-    default_lat = 41.311081  # latitude
     default_zoom = 15
 
     # Lat/Lon kiritish uchun input maydonlari
