@@ -49,7 +49,7 @@ class Order(models.Model):
     )
     # latitude = models.DecimalField(max_digits=9, decimal_places=6, blank=True, null=True)
     # longitude = models.DecimalField(max_digits=9, decimal_places=6, blank=True, null=True)
-    point = gis_models.PointField(srid=4326, default=Point(69.279759, 41.311081))
+    point = gis_models.PointField(srid=4326, default=Point(69.279759, 41.311081) )
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
