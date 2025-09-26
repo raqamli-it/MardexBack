@@ -16,9 +16,10 @@ class OrderImageInline(admin.TabularInline):
 
 
 @admin.register(Order)
-class OrderAdmin(gis_admin.OSMGeoAdmin):  # OSMGeoAdmin ishlatamiz
+class OrderAdmin(gis_admin.OSMGeoAdmin):
     inlines = [OrderImageInline]
-    list_display = ('id', 'client', 'worker', 'status', 'created_at', 'client_is_finished', 'get_finished_workers',)
+    list_display = ('id', 'client', 'worker', 'status', 'created_at',
+                    'client_is_finished', 'get_finished_workers',)
     list_filter = ('status', 'job_category', 'created_at',)
     search_fields = ('client__username', 'worker__username', 'job_category__title')
     ordering = ('-created_at',)
@@ -30,22 +31,18 @@ class OrderAdmin(gis_admin.OSMGeoAdmin):  # OSMGeoAdmin ishlatamiz
     # Xarita o‘lchamlari
     map_width = 1100
     map_height = 600
-    default_lat = 41.311081  # latitude
-    default_lon = 69.279759  # longitude
-    default_zoom = 15
+
+    # ✅ To‘g‘ri tartibda yozamiz: (lon, lat)
+    default_lon = 69.279759   # x
+    default_lat = 41.311081   # y
+    default_zoom = 12
 
     # Lat/Lon kiritish uchun input maydonlari
     formfield_overrides = {
-        gis_models.PointField: {"widget": forms.TextInput(attrs={"placeholder": "lat, lon"})},
+        gis_models.PointField: {
+            "widget": forms.TextInput(attrs={"placeholder": "lon, lat"})
+        },
     }
-
-    def get_map_widget(self, db_field, **kwargs):
-        widget = super().get_map_widget(db_field, **kwargs)
-        widget.params['default_lon'] = 69.279759
-        widget.params['default_lat'] = 41.311081
-        widget.params['default_zoom'] = 12
-        return widget
-
 
 @admin.register(ClientNews)
 class ClientNewsAdmin(admin.ModelAdmin):
