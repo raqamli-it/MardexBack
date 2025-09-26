@@ -1,7 +1,10 @@
 from django.contrib import admin
 
 from users.models import ClientProfile
-from .models import Order, ClientNews, ClientTarif, OrderImage
+from .models import ClientNews, ClientTarif, OrderImage
+from django.contrib.gis import admin as gis_admin
+from django import forms
+from django.contrib.gis.db import models as gis_models
 
 
 class OrderImageInline(admin.TabularInline):
@@ -12,8 +15,7 @@ class OrderImageInline(admin.TabularInline):
 
 
 
-@admin.register(Order)
-class OrderAdmin(admin.ModelAdmin):
+class OrderAdmin(gis_admin.OSMGeoAdmin):  # OSMGeoAdmin ishlatamiz
     inlines = [OrderImageInline]
     list_display = ('id', 'client', 'worker', 'status', 'created_at', 'client_is_finished', 'get_finished_workers',)
     list_filter = ('status', 'job_category', 'created_at',)
@@ -22,8 +24,20 @@ class OrderAdmin(admin.ModelAdmin):
 
     def get_finished_workers(self, obj):
         return obj.get_finished_workers()
-
     get_finished_workers.short_description = "Finished Workers"
+
+    # Xarita o‘lchamlari
+    map_width = 1100
+    map_height = 600
+    default_lat = 41.311081   # Amir Temur maydoni
+    default_lon = 69.279759
+    default_zoom = 15
+
+    # Lat/Lon kiritish uchun input maydonlari
+    formfield_overrides = {
+        gis_models.PointField: {"widget": forms.TextInput(attrs={"placeholder": "lat, lon"})},
+    }
+
 
 
 @admin.register(ClientNews)
