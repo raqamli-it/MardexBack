@@ -102,7 +102,7 @@ def get_filtered_workers(order, min_radius_km=None, max_radius_km=None):
         region=order.region,
         city=order.city,
         is_worker_active=True,
-        location__isnull=False
+        point__isnull=False
     )
 
     if order.job_id.exists():
@@ -112,7 +112,7 @@ def get_filtered_workers(order, min_radius_km=None, max_radius_km=None):
         workers = workers.filter(gender=order.gender)
 
     return workers.annotate(
-        distance=Distance('location', order.location)
+        distance=Distance('point', order.point)
     ).filter(
         distance__gte=min_radius_km * 1000,
         distance__lte=max_radius_km * 1000

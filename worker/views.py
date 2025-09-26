@@ -16,7 +16,7 @@ from .models import WorkerNews
 from .serializers import WorkerRegistrationSerializer, WorkerLoginSerializer, \
     WorkerPasswordChangeSerializer, UserUpdateSerializer, \
     WorkerImageSerializer, WorkerJobSerializer, WorkerPhoneUpdateSerializer, WorkerNewsSerializer, \
-    WorkerUpdateSerializer, WorkerImageDeleteSerializer, WorkerActiveSerializer, WorkerLocationUpdateSerializer
+    WorkerUpdateSerializer, WorkerImageDeleteSerializer, WorkerActiveSerializer
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from users.models import AbstractUser
