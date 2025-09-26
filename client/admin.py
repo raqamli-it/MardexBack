@@ -1,7 +1,7 @@
 from django.contrib import admin
 
 from users.models import ClientProfile
-from .models import ClientNews, ClientTarif, OrderImage
+from .models import ClientNews, ClientTarif, OrderImage, Order
 from django.contrib.gis import admin as gis_admin
 from django import forms
 from django.contrib.gis.db import models as gis_models
@@ -14,7 +14,7 @@ class OrderImageInline(admin.TabularInline):
 
 
 
-
+@admin.register(Order)
 class OrderAdmin(gis_admin.OSMGeoAdmin):  # OSMGeoAdmin ishlatamiz
     inlines = [OrderImageInline]
     list_display = ('id', 'client', 'worker', 'status', 'created_at', 'client_is_finished', 'get_finished_workers',)
