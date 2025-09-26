@@ -22,21 +22,26 @@ class ClientInfoSerializer(serializers.ModelSerializer):
 
 
 class OrderSerializer(serializers.ModelSerializer):
-    images = OrderImageSerializer(many=True, read_only=True)  # natijani ko‘rsatish uchun
-    image = serializers.ListField(  # yuklash uchun
+    images = OrderImageSerializer(many=True, read_only=True)
+    image = serializers.ListField(
         child=serializers.ImageField(),
         write_only=True,
         required=False
     )
-    client_info = ClientInfoSerializer(source='client', read_only=True)  # qo‘shildi
+    client_info = ClientInfoSerializer(source='client', read_only=True)
     created_at = serializers.DateTimeField(format="%Y-%m-%d", read_only=True)
+
+    # yangi qo‘shiladigan fieldlar (faqat create uchun)
+    longitude = serializers.FloatField(write_only=True, required=False)
+    latitude = serializers.FloatField(write_only=True, required=False)
 
     class Meta:
         model = Order
         fields = [
             'id', 'job_category', 'job_id', 'desc', 'price', 'full_desc',
             'region', 'city', 'gender', 'worker_count',
-            'point', 'images', 'image', 'client_info', 'created_at', 'status',
+            'point', 'longitude', 'latitude',   # qo‘shildi
+            'images', 'image', 'client_info', 'created_at', 'status',
         ]
 
     def validate(self, data):
@@ -48,20 +53,23 @@ class OrderSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         image_files = validated_data.pop('image', [])
         job_ids = validated_data.pop('job_id', [])
+        lon = validated_data.pop('longitude', None)
+        lat = validated_data.pop('latitude', None)
+
         validated_data['client'] = self.context['request'].user
 
-        #  faqat point ishlatamiz
-        point = validated_data.get("point")
-        if not point:
+        # longitude va latitude bo‘lsa, point yasaymiz
+        if lon is not None and lat is not None:
+            validated_data['point'] = Point(lon, lat)
+
+        if not validated_data.get("point"):
             raise serializers.ValidationError({"point": "Order uchun joylashuv (point) majburiy."})
 
-        # order yaratamiz
         order = Order.objects.create(**validated_data)
 
         if job_ids:
             order.job_id.set(job_ids)
 
-        # faqat 5 ta rasm yuklashga ruxsat
         for img in image_files[:5]:
             OrderImage.objects.create(order=order, image=img)
 
