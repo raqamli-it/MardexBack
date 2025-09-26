@@ -5,6 +5,7 @@ from .models import ClientNews, ClientTarif, OrderImage, Order
 from django.contrib.gis import admin as gis_admin
 from django import forms
 from django.contrib.gis.db import models as gis_models
+from django.contrib.gis.admin import OSMGeoAdmin
 
 
 class OrderImageInline(admin.TabularInline):
