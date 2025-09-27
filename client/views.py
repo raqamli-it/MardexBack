@@ -72,7 +72,7 @@ class OrderCreateView(generics.CreateAPIView):
 
         return Response({
             "detail": "Order muvaffaqiyatli yaratildi!",
-            "order": OrderSerializer(self.order).data,
+            "order": OrderSerializer(self.order, context={"request": request}).data,
             "eligible_workers": workers_data
         })
 
