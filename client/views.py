@@ -43,32 +43,11 @@ class OrderCreateView(generics.CreateAPIView):
         """Overriding to return custom response"""
         response = super().create(request, *args, **kwargs)
 
-        workers_data = []
-        for w in self.eligible_workers:
-            worker_point = None
-            if w.point:
-                worker_point = {
-                    "type": "Point",
-                    "coordinates": [w.point.x, w.point.y]  # x=lon, y=lat
-                }
-
-            workers_data.append({
-                "id": w.id,
-                "full_name": w.full_name,
-                "avatar": w.avatar.url if w.avatar else None,
-                "job_id": list(w.job_id.values_list("id", flat=True)),
-                "description": w.description,
-                "reyting": w.reyting,
-                "phone": w.phone,
-                "point": worker_point,  #  endi faqat point qaytadi
-                "images": [
-                    {
-                        "id": img.id,
-                        "image": img.image.url if img.image else None
-                    }
-                    for img in WorkerImage.objects.filter(user=w)
-                ]
-            })
+        workers_data = WorkerSerializer(
+            self.eligible_workers,
+            many=True,
+            context={"request": request}
+        ).data
 
         return Response({
             "detail": "Order muvaffaqiyatli yaratildi!",
