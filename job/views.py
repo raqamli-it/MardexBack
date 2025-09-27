@@ -83,30 +83,21 @@ class RegionListByCityView(APIView):
         return Response(result)
 
 
-def get_filtered_workers(order, min_radius_km=None, max_radius_km=None):
+
+def get_filtered_workers(order, max_radius_km=None):
     """
     Orderga mos workerlarni filter qilib,
     PostGIS yordamida eng yaqin workerlarni qaytaradi.
     """
 
-    # Debug uchun
-    print("Order job_category_id:", order.job_category_id)
-    print("Order region_id:", order.region_id)
-    print("Order city_id:", order.city_id)
-
-    for w in AbstractUser.objects.filter(role='worker', status='idle', is_worker_active=True, point__isnull=False):
-        print(f"Worker {w.id} -> job_category_id={w.job_category_id}, region_id={w.region_id}, city_id={w.city_id}")
-
     # Agar parametrlar kelsa ulardan foydalansin, kelmasa settings.py dagi defaultni olsin
-    min_radius_km = min_radius_km or getattr(settings, "NEAREST_WORKER_MIN_RADIUS_KM", 1)
     max_radius_km = max_radius_km or getattr(settings, "NEAREST_WORKER_MAX_RADIUS_KM", 30)
+
 
     workers = AbstractUser.objects.filter(
         role='worker',
         status='idle',
         job_category=order.job_category,
-        region=order.region,
-        city=order.city,
         is_worker_active=True,
         point__isnull=False
     )
@@ -117,39 +108,8 @@ def get_filtered_workers(order, min_radius_km=None, max_radius_km=None):
     if order.gender:
         workers = workers.filter(gender=order.gender)
 
-    return workers
-
-
-# def get_filtered_workers(order, min_radius_km=None, max_radius_km=None):
-#     """
-#     Orderga mos workerlarni filter qilib,
-#     PostGIS yordamida eng yaqin workerlarni qaytaradi.
-#     """
-#
-#     # Agar parametrlar kelsa ulardan foydalansin, kelmasa settings.py dagi defaultni olsin
-#     min_radius_km = min_radius_km or getattr(settings, "NEAREST_WORKER_MIN_RADIUS_KM", 1)
-#     max_radius_km = max_radius_km or getattr(settings, "NEAREST_WORKER_MAX_RADIUS_KM", 30)
-#
-#
-#     workers = AbstractUser.objects.filter(
-#         role='worker',
-#         status='idle',
-#         job_category=order.job_category,
-#         region=order.region,
-#         city=order.city,
-#         is_worker_active=True,
-#         point__isnull=False
-#     )
-#
-#     if order.job_id.exists():
-#         workers = workers.filter(job_id__in=order.job_id.all()).distinct()
-#
-#     if order.gender:
-#         workers = workers.filter(gender=order.gender)
-#
-#     # return workers.annotate(
-#     #     distance=Distance('point', order.point)
-#     # ).filter(
-#     #     distance__gte=min_radius_km * 1000,
-#     #     distance__lte=max_radius_km * 1000
-#     # ).order_by('distance')
+    return workers.annotate(
+        distance=Distance('point', order.point)
+    ).filter(
+        distance__lte=max_radius_km * 1000
+    ).order_by('distance')
