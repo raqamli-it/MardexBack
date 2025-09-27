@@ -11,7 +11,7 @@ from django.contrib.gis.admin import OSMGeoAdmin
 class OrderImageInline(admin.TabularInline):
     model = OrderImage
     extra = 1
-    max_num = 5  # limit to 5 images
+    max_num = 5
 
 
 
@@ -32,7 +32,6 @@ class OrderAdmin(gis_admin.OSMGeoAdmin):
     map_width = 1100
     map_height = 600
 
-    # ✅ To‘g‘ri tartibda yozamiz: (lon, lat)
     default_lon = 69.279759   # x
     default_lat = 41.311081   # y
     default_zoom = 12

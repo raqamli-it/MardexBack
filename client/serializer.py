@@ -1,9 +1,7 @@
 from django.contrib.gis.geos import Point
-
 from users.models import AbstractUser, ClientProfile
 from .models import ClientReyting, OrderImage
 from .models import Order, ClientNews, ClientTarif, TarifHaridi
-
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
 

@@ -2,7 +2,6 @@ from django.conf import settings
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from django.contrib.gis.geos import Point
 from django.contrib.gis.db.models.functions import Distance
 from users.models import AbstractUser
 from .models import CategoryJob, Job, City, Region

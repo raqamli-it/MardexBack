@@ -383,7 +383,7 @@ class UpdateWorkerLocationAPIView(APIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        # ✅ PointField yangilash
+        # PointField yangilash
         request.user.point = Point(lon, lat)
         request.user.save(update_fields=["point"])
 

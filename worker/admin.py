@@ -1,5 +1,4 @@
 from django.contrib import admin
-
 from users.models import WorkerProfile
 from worker.models import WorkerNews, WorkerImage
 from django.contrib.auth import get_user_model, forms
@@ -26,8 +25,8 @@ class ProfileAdmin(OSMGeoAdmin):  # GIS xarita widgeti uchun OSMGeoAdmin ishlata
               'role', 'gender', 'point', 'status', 'is_worker_active']
     inlines = [WorkerImageInline]
     # Xarita o'lchamlari
-    map_width = 1100 # kengligi px
-    map_height = 600  # balandligi px
+    map_width = 1100
+    map_height = 600
     default_lat = 41.311081
     default_lon = 69.279759
     default_zoom = 15
