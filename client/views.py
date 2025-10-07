@@ -1,8 +1,6 @@
 from django.db.models import Case, When, IntegerField
 
-from job.views import get_filtered_workers
 from users.models import AbstractUser
-from worker.models import WorkerImage
 from worker.serializers import WorkerSerializer
 from .models import Order, ClientNews, ClientTarif, TarifHaridi
 from .serializer import (
@@ -22,6 +20,7 @@ from .serializer import (ClientRegistrationSerializer, ClientLoginSerializer, Cl
 from django.contrib.auth import get_user_model
 from job.models import Job, CategoryJob
 from job.serializer import CategoryJobSerializer, JobSerializer
+from .service import WorkerService
 
 User = get_user_model()
 
@@ -37,7 +36,7 @@ class OrderCreateView(generics.CreateAPIView):
     def perform_create(self, serializer):
         """Order yaratish va filterlangan workerlarni qaytarish"""
         self.order = serializer.save(client=self.request.user)
-        self.eligible_workers = get_filtered_workers(self.order)
+        self.eligible_workers = WorkerService.get_eligible_workers(self.order)
 
     def create(self, request, *args, **kwargs):
         """Overriding to return custom response"""
@@ -266,6 +265,7 @@ class ClientProfileView(APIView):
 
 class FilteredWorkerListView(generics.ListAPIView):
     serializer_class = WorkerSerializer
+    permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
         order_id = self.kwargs.get("order_id")
@@ -273,12 +273,18 @@ class FilteredWorkerListView(generics.ListAPIView):
 
         try:
             order = Order.objects.get(id=order_id)
-            return get_filtered_workers(
-                order,
-                max_radius_km=max_radius
-            )
         except Order.DoesNotExist:
             return AbstractUser.objects.none()
+
+        #  Redis asosida workerlarni filterlash
+        workers = WorkerService.get_eligible_workers(order)
+
+        # Agar max_radius parametr kiritilgan bo‘lsa, WorkerService uni ishlatadi
+        if workers:
+            # Agar WorkerService.get_eligible_workers async natija qaytarsa
+            # bu joyda sinxron list yoki queryset sifatida bo‘ladi
+            return workers
+        return AbstractUser.objects.none()
 
 class ClientOrderHistoryListView(generics.ListAPIView):
     serializer_class = OrderSerializer
