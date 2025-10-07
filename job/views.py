@@ -83,40 +83,40 @@ class RegionListByCityView(APIView):
 
 
 
-def get_filtered_workers(order, max_radius_km=None):
-    """
-    Workerlarni dinamik radius bo‘yicha qidiradi:
-    - 0 km (metrdan) boshlab
-    - 1 km qadam bilan oshirib boradi
-    - birinchi topilgan workerlarni qaytaradi
-    """
-    max_radius_km = max_radius_km or getattr(settings, "NEAREST_WORKER_MAX_RADIUS_KM", 30)
-
-    # radiusni 1 km qadam bilan oshirib qidiramiz
-    for radius in range(1, max_radius_km + 1):
-        workers = AbstractUser.objects.filter(
-            role='worker',
-            status='idle',
-            job_category=order.job_category,
-            is_worker_active=True,
-            point__isnull=False
-        )
-
-        if order.job_id.exists():
-            workers = workers.filter(job_id__in=order.job_id.all()).distinct()
-
-        if order.gender:
-            workers = workers.filter(gender=order.gender)
-
-        workers = workers.annotate(
-            distance=Distance('point', order.point)
-        ).filter(
-            distance__lte=radius * 1000   # masofani radius km * 1000 metr
-        ).order_by('distance')
-
-        # Agar worker topilsa shu radiusdagi natijani qaytaramiz
-        if workers.exists():
-            return workers
-
-    # Agar umuman topilmasa → bo‘sh queryset
-    return AbstractUser.objects.none()
+# def get_filtered_workers(order, max_radius_km=None):
+#     """
+#     Workerlarni dinamik radius bo‘yicha qidiradi:
+#     - 0 km (metrdan) boshlab
+#     - 1 km qadam bilan oshirib boradi
+#     - birinchi topilgan workerlarni qaytaradi
+#     """
+#     max_radius_km = max_radius_km or getattr(settings, "NEAREST_WORKER_MAX_RADIUS_KM", 30)
+#
+#     # radiusni 1 km qadam bilan oshirib qidiramiz
+#     for radius in range(1, max_radius_km + 1):
+#         workers = AbstractUser.objects.filter(
+#             role='worker',
+#             status='idle',
+#             job_category=order.job_category,
+#             is_worker_active=True,
+#             point__isnull=False
+#         )
+#
+#         if order.job_id.exists():
+#             workers = workers.filter(job_id__in=order.job_id.all()).distinct()
+#
+#         if order.gender:
+#             workers = workers.filter(gender=order.gender)
+#
+#         workers = workers.annotate(
+#             distance=Distance('point', order.point)
+#         ).filter(
+#             distance__lte=radius * 1000   # masofani radius km * 1000 metr
+#         ).order_by('distance')
+#
+#         # Agar worker topilsa shu radiusdagi natijani qaytaramiz
+#         if workers.exists():
+#             return workers
+#
+#     # Agar umuman topilmasa → bo‘sh queryset
+#     return AbstractUser.objects.none()

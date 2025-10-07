@@ -23,10 +23,10 @@ class UserOrderConsumer(AsyncWebsocketConsumer):
 
         if path.startswith("/ws/worker/") and user_role == "worker":
             self.room_group_name = f"worker_{user.id}"
-            print("✅ Worker qo‘shildi:", self.room_group_name)   # <<< shu yerga qo‘shasiz
+            # print(" Worker qo‘shildi:", self.room_group_name)   # <<< shu yerga qo‘shasiz
         elif path.startswith("/ws/clients/") and user_role == "client":
             self.room_group_name = f"client_{user.id}"
-            print("✅ Client qo‘shildi:", self.room_group_name)   # <<< bu yerga ham
+            # print(" Client qo‘shildi:", self.room_group_name)   # <<< bu yerga ham
         else:
             await self.close()
             return
@@ -42,7 +42,7 @@ class UserOrderConsumer(AsyncWebsocketConsumer):
         await self.send(text_data=json.dumps(event))
 
     async def send_order_notification(self, event):
-        print("🔔 Worker consumer event keldi:", event)  # <-- test
+        # print(" Worker consumer event keldi:", event)  # <-- test
         await self.send(text_data=json.dumps(event))
 
 
@@ -357,3 +357,67 @@ class OrderActionConsumer(AsyncWebsocketConsumer):
         result = {"message": "Success", **data, "success": True}
         await self.send(text_data=json.dumps(result))
         return result
+
+
+REDIS_URL = "redis://redis:6379"
+
+class WorkerLocationConsumer(AsyncJsonWebsocketConsumer):
+    redis = None  # Doimiy connection (klass darajasida)
+
+    async def connect(self):
+        user = self.scope["user"]
+
+        if not user.is_authenticated or getattr(user, "role", None) != "worker":
+            await self.close()
+            return
+
+        # Redis bilan bitta global ulanish
+        if not WorkerLocationConsumer.redis:
+            WorkerLocationConsumer.redis = await aioredis.from_url(
+                REDIS_URL,
+                decode_responses=True,
+                encoding="utf-8",
+            )
+
+        self.user = user
+        await self.accept()
+        await self.send_json({"detail": f"Ulandi: {self.user.username}"})
+
+    async def receive_json(self, content, **kwargs):
+        lon = content.get("longitude")
+        lat = content.get("latitude")
+
+        if lon is None or lat is None:
+            await self.send_json({"error": "Koordinatalar majburiy."})
+            return
+
+        try:
+            lon = float(lon)
+            lat = float(lat)
+        except ValueError:
+            await self.send_json({"error": "Koordinatalar noto‘g‘ri formatda."})
+            return
+
+        key = f"worker_location:{self.user.id}"
+        value = json.dumps({"lon": lon, "lat": lat})
+
+        # Tez ishlaydigan Redis yozuvi (1 daqiqa TTL bilan)
+        await WorkerLocationConsumer.redis.set(key, value, ex=60)
+
+        await self.send_json({
+            "detail": "Joylashuv Redisda yangilandi!",
+            "longitude": lon,
+            "latitude": lat
+        })
+
+    async def disconnect(self, close_code):
+        key = f"worker_location:{self.user.id}"
+        data = await WorkerLocationConsumer.redis.get(key)
+        if data:
+            coords = json.loads(data)
+            point = Point(coords["lon"], coords["lat"])
+            await sync_to_async(self._save_point_to_db)(point)
+
+    def _save_point_to_db(self, point):
+        self.user.point = point
+        self.user.save(update_fields=["point"])
