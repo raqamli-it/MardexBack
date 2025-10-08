@@ -177,6 +177,17 @@ SIMPLE_JWT = {
 FILE_UPLOAD_MAX_MEMORY_SIZE = 52428800  # 50 MB (baytlarda)
 DATA_UPLOAD_MAX_MEMORY_SIZE = 52428800  # 50 MB
 
+CACHES = {
+    "default": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": "redis://redis:6379/1",  # ️ yoki "redis://127.0.0.1:6379/1" — agar localda
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+        }
+    }
+}
+
+
 CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "channels_redis.core.RedisChannelLayer",
