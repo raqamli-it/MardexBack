@@ -50,17 +50,19 @@ class UserOrderConsumer(AsyncWebsocketConsumer):
 
 class OrderActionConsumer(AsyncWebsocketConsumer):
     async def connect(self):
+        self.room_name = "order_action"
         self.user = await self.get_user_from_token()
         if not self.user:
             await self.close()
             return
 
-        self.room_name = "order_action"
+
         await self.channel_layer.group_add(self.room_name, self.channel_name)
         await self.accept()
 
     async def disconnect(self, close_code):
-        await self.channel_layer.group_discard(self.room_name, self.channel_name)
+        if hasattr(self, "room_name"):
+            await self.channel_layer.group_discard(self.room_name, self.channel_name)
 
     async def receive(self, text_data=None, bytes_data=None):
         try:
