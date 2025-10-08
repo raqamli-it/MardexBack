@@ -6,8 +6,7 @@ from django.contrib.auth.models import AnonymousUser
 from django.contrib.gis.geos import Point
 from client.models import Order
 from django.contrib.auth import get_user_model
-from redis import asyncio as aioredis
-
+import redis.asyncio as aioredis
 User = get_user_model()
 
 
@@ -408,6 +407,7 @@ class WorkerLocationConsumer(AsyncJsonWebsocketConsumer):
 
         # Tez ishlaydigan Redis yozuvi (1 daqiqa TTL bilan)
         await WorkerLocationConsumer.redis.set(key, value, ex=60)
+        print(f"✅ Redisga yozildi: {key} -> {value}")  # 👈 debug uchun
 
         await self.send_json({
             "detail": "Joylashuv Redisda yangilandi!",
