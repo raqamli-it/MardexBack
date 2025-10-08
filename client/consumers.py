@@ -406,7 +406,7 @@ class WorkerLocationConsumer(AsyncJsonWebsocketConsumer):
         value = json.dumps({"lon": lon, "lat": lat})
 
         # Tez ishlaydigan Redis yozuvi (1 daqiqa TTL bilan)
-        await WorkerLocationConsumer.redis.set(key, value, ex=60)
+        await WorkerLocationConsumer.redis.set(key, value, ex=600)
         print(f"✅ Redisga yozildi: {key} -> {value}")  # 👈 debug uchun
 
         await self.send_json({
