@@ -2,7 +2,7 @@ from django.urls import path
 
 from .sent_order import SendOrderToSelectedWorkersView
 from .views import ClientDetailView, ClientNewsDetailView, OrderCreateView, FilteredWorkerListView, \
-    ClientOrderHistoryListView, ClientCancelStatsView, AcceptedWorkersView
+    ClientOrderHistoryListView, ClientCancelStatsView, AcceptedWorkersView, GetUserLocationAPIView
 
 from .views import (
     newsclient_list,
@@ -43,6 +43,9 @@ urlpatterns = [
     path('orders/client-cancel-stats/', ClientCancelStatsView.as_view(), name='client-cancel-stats'),
 
     path("orders/<int:order_id>/accepted-workers/", AcceptedWorkersView.as_view(), name="accepted-workers"),
+
+    path("worker-test-location/<int:user_id>/", GetUserLocationAPIView.as_view()),
+
 
 ]
 if settings.DEBUG:

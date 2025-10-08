@@ -77,3 +77,11 @@ class WorkerService:
             except json.JSONDecodeError:
                 continue
         return workers
+
+def get_user_location(user_id):
+    redis_conn = get_redis_connection("default")
+    key = f"user_location_{user_id}"
+    value = redis_conn.get(key)
+    if value:
+        return json.loads(value)
+    return None

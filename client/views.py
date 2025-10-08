@@ -20,7 +20,7 @@ from .serializer import (ClientRegistrationSerializer, ClientLoginSerializer, Cl
 from django.contrib.auth import get_user_model
 from job.models import Job, CategoryJob
 from job.serializer import CategoryJobSerializer, JobSerializer
-from .service import WorkerService
+from .service import WorkerService, get_user_location
 
 User = get_user_model()
 
@@ -344,3 +344,11 @@ class AcceptedWorkersView(APIView):
         accepted_workers = order.accepted_workers.all()
         serializer = WorkerSerializer(accepted_workers, many=True)
         return Response(serializer.data)
+
+
+class GetUserLocationAPIView(APIView):
+    def get(self, request, user_id):
+        data = get_user_location(user_id)
+        if data:
+            return Response({"location": data})
+        return Response({"detail": "Location not found"}, status=404)
