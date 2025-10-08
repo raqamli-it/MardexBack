@@ -385,7 +385,8 @@ class WorkerLocationConsumer(AsyncJsonWebsocketConsumer):
 
         self.user = user
         await self.accept()
-        await self.send_json({"detail": f"Ulandi: {self.user.full_name}"})
+        full_name = await sync_to_async(lambda: self.user.full_name)()
+        await self.send_json({"detail": f"Ulandi: {full_name}"})
 
     async def receive_json(self, content, **kwargs):
         lon = content.get("longitude")
