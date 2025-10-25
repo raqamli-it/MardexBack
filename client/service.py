@@ -28,11 +28,18 @@ class WorkerService:
         instance = cls()
         return async_to_sync(instance.get_filtered_workers)(order)
 
-
     async def get_filtered_workers(self, order, max_radius_km=None):
+        """Order joylashuvi asosida yaqin workerlarni topish"""
         max_radius_km = max_radius_km or getattr(settings, "NEAREST_WORKER_MAX_RADIUS_KM", 30)
-        order_lat = float(order.latitude)
-        order_lon = float(order.longitude)
+
+        # ✅ Agar order.point mavjud bo‘lsa undan olish, bo‘lmasa manual koordinata
+        if hasattr(order, "point") and order.point:
+            order_lon = float(order.point.x)
+            order_lat = float(order.point.y)
+        else:
+            # fallback (serializerda longitude/latitude kelsa)
+            order_lon = float(getattr(order, "longitude", 0))
+            order_lat = float(getattr(order, "latitude", 0))
 
         workers_data = await sync_to_async(self._get_all_workers)()
 
@@ -41,19 +48,22 @@ class WorkerService:
 
             for worker in workers_data:
                 if (
-                    worker["role"] != "worker"
-                    or worker["status"] != "idle"
-                    or not worker["is_worker_active"]
-                    or worker["job_category"] != order.job_category
+                    worker.get("role") != "worker"
+                    or worker.get("status") != "idle"
+                    or not worker.get("is_worker_active")
+                    or worker.get("job_category") != order.job_category
                 ):
                     continue
 
-                if order.gender and worker["gender"] != order.gender:
+                if order.gender and worker.get("gender") != order.gender:
                     continue
+
+                worker_lat = float(worker.get("latitude", 0))
+                worker_lon = float(worker.get("longitude", 0))
 
                 distance = calculate_distance(
                     order_lat, order_lon,
-                    float(worker["latitude"]), float(worker["longitude"])
+                    worker_lat, worker_lon
                 )
 
                 if distance <= radius:
@@ -66,6 +76,7 @@ class WorkerService:
         return []
 
     def _get_all_workers(self):
+        """Redis'dan barcha workerlarni JSON holatda olish"""
         workers = []
         for key in self.redis.scan_iter("worker:*"):
             data = self.redis.get(key)
@@ -78,7 +89,9 @@ class WorkerService:
                 continue
         return workers
 
+
 def get_user_location(user_id):
+    """Redis'dan foydalanuvchi joylashuvini olish"""
     redis_conn = get_redis_connection("default")
     key = f"user_location_{user_id}"
     value = redis_conn.get(key)
