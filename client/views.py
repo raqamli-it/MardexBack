@@ -263,29 +263,39 @@ class ClientProfileView(APIView):
             return Response({"detail": "Foydalanuvchi tizimga kirmagan"}, status=401)
 
 
-class FilteredWorkerListView(generics.ListAPIView):
-    serializer_class = WorkerSerializer
+class FilteredWorkerListView(APIView):
     permission_classes = [IsAuthenticated]
 
-    def get_queryset(self):
-        order_id = self.kwargs.get("order_id")
-        max_radius = int(self.request.query_params.get("max_radius", 30))
-
+    def get(self, request, order_id):
+        """Redis asosida order uchun mos workerlarni olish"""
         try:
             order = Order.objects.get(id=order_id)
         except Order.DoesNotExist:
-            return AbstractUser.objects.none()
+            return Response({"detail": "Order topilmadi."}, status=404)
 
-        #  Redis asosida workerlarni filterlash
-        workers = WorkerService.get_eligible_workers(order)
+        # max_radius so‘rovdanoq olinadi (default=30 km)
+        max_radius = int(request.query_params.get("max_radius", 30))
 
-        # Agar max_radius parametr kiritilgan bo‘lsa, WorkerService uni ishlatadi
-        if workers:
-            # Agar WorkerService.get_eligible_workers async natija qaytarsa
-            # bu joyda sinxron list yoki queryset sifatida bo‘ladi
-            return workers
-        return AbstractUser.objects.none()
+        # Redis orqali workerlarni topamiz
+        workers_data = WorkerService.get_eligible_workers(order)
 
+        # Agar natija bo‘sh bo‘lsa
+        if not workers_data:
+            return Response({"detail": "Hech qanday mos worker topilmadi."}, status=200)
+
+        # Redisdan kelgan dictlar bo‘yicha Worker obyektlarini DB’dan topamiz
+        worker_ids = [w["id"] for w in workers_data if "id" in w]
+        queryset = AbstractUser.objects.filter(id__in=worker_ids)
+
+        # Serializer orqali chiqish
+        serialized = WorkerSerializer(queryset, many=True, context={"request": request}).data
+
+        return Response({
+            "order_id": order.id,
+            "radius_km": max_radius,
+            "worker_count": len(serialized),
+            "workers": serialized,
+        })
 class ClientOrderHistoryListView(generics.ListAPIView):
     serializer_class = OrderSerializer
     permission_classes = [AllowAny]  # Token talab qilinmaydi
