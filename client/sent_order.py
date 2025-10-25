@@ -28,9 +28,17 @@ class SendOrderToSelectedWorkersView(APIView):
         if order.client != request.user:
             return Response({"detail": "Siz ushbu order egasi emassiz!"}, status=403)
 
-        #  WorkerService orqali filtering
+        # Redis asosida filtering
         eligible_workers = WorkerService.get_eligible_workers(order)
-        selected_workers = eligible_workers.filter(id__in=worker_ids)[:20]
+
+        # Redis'dan qaytgan list ichidan id larni olish
+        eligible_worker_ids = [int(w["id"]) for w in eligible_workers]
+
+        # Faqat client tanlagan va Redis orqali mos deb topilgan workerlar
+        selected_workers = AbstractUser.objects.filter(
+            id__in=worker_ids,
+            id__in=eligible_worker_ids
+        )[:20]
 
         if not selected_workers.exists():
             return Response({"detail": "Hech qanday mos worker topilmadi!"}, status=400)
@@ -49,7 +57,6 @@ class SendOrderToSelectedWorkersView(APIView):
 
             # Worker'ni orderga bog‘lash
             order.notified_workers.add(worker)
-            order.save()
 
             # Worker timeout mexanizmini ishga tushirish
             threading.Thread(
@@ -57,6 +64,7 @@ class SendOrderToSelectedWorkersView(APIView):
                 args=(order, worker)
             ).start()
 
+        order.save()
         return Response({"detail": f"{len(selected_workers)} ta workerga xabar yuborildi!"})
 
 
