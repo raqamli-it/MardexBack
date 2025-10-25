@@ -364,8 +364,9 @@ class OrderActionConsumer(AsyncWebsocketConsumer):
 
 REDIS_URL = "redis://redis:6379"
 
+
 class WorkerLocationConsumer(AsyncJsonWebsocketConsumer):
-    redis = None  # Doimiy connection (klass darajasida)
+    redis = None  # Global Redis connection (class-level)
 
     async def connect(self):
         user = self.scope["user"]
@@ -374,7 +375,7 @@ class WorkerLocationConsumer(AsyncJsonWebsocketConsumer):
             await self.close()
             return
 
-        # Redis bilan bitta global ulanish
+        # Bitta umumiy Redis connection
         if not WorkerLocationConsumer.redis:
             WorkerLocationConsumer.redis = await aioredis.from_url(
                 REDIS_URL,
@@ -402,12 +403,27 @@ class WorkerLocationConsumer(AsyncJsonWebsocketConsumer):
             await self.send_json({"error": "Koordinatalar noto‘g‘ri formatda."})
             return
 
-        key = f"worker_location:{self.user.id}"
-        value = json.dumps({"lon": lon, "lat": lat})
+        # Workerning to‘liq ma’lumotlarini olish (DB dan)
+        user = await sync_to_async(lambda: self.user)()
+        worker_data = {
+            "id": user.id,
+            "role": user.role,
+            "status": user.status,
+            "is_worker_active": getattr(user, "is_worker_active", True),
+            "job_category": getattr(user, "job_category_id", None),
+            "region": user.region,
+            "city": user.city,
+            "gender": user.gender,
+            "latitude": lat,
+            "longitude": lon,
+        }
 
-        # Tez ishlaydigan Redis yozuvi (1 daqiqa TTL bilan)
-        await WorkerLocationConsumer.redis.set(key, value, ex=600)
-        print(f"✅ Redisga yozildi: {key} -> {value}")  # 👈 debug uchun
+        key = f"worker:{user.id}"
+        value = json.dumps(worker_data)
+
+        # TTL ni o‘chiramiz → qiymat har doim mavjud bo‘ladi (agar update kelmasa ham)
+        await WorkerLocationConsumer.redis.set(key, value)
+        print(f"✅ Redisga yozildi: {key} -> {value}")
 
         await self.send_json({
             "detail": "Joylashuv Redisda yangilandi!",
@@ -416,13 +432,78 @@ class WorkerLocationConsumer(AsyncJsonWebsocketConsumer):
         })
 
     async def disconnect(self, close_code):
-        key = f"worker_location:{self.user.id}"
+        key = f"worker:{self.user.id}"
         data = await WorkerLocationConsumer.redis.get(key)
         if data:
             coords = json.loads(data)
-            point = Point(coords["lon"], coords["lat"])
+            point = Point(coords["longitude"], coords["latitude"])
             await sync_to_async(self._save_point_to_db)(point)
 
     def _save_point_to_db(self, point):
         self.user.point = point
         self.user.save(update_fields=["point"])
+
+# REDIS_URL = "redis://redis:6379"
+#
+# class WorkerLocationConsumer(AsyncJsonWebsocketConsumer):
+#     redis = None  # Doimiy connection (klass darajasida)
+#
+#     async def connect(self):
+#         user = self.scope["user"]
+#
+#         if not user.is_authenticated or getattr(user, "role", None) != "worker":
+#             await self.close()
+#             return
+#
+#         # Redis bilan bitta global ulanish
+#         if not WorkerLocationConsumer.redis:
+#             WorkerLocationConsumer.redis = await aioredis.from_url(
+#                 REDIS_URL,
+#                 decode_responses=True,
+#                 encoding="utf-8",
+#             )
+#
+#         self.user = user
+#         await self.accept()
+#         full_name = await sync_to_async(lambda: self.user.full_name)()
+#         await self.send_json({"detail": f"Ulandi: {full_name}"})
+#
+#     async def receive_json(self, content, **kwargs):
+#         lon = content.get("longitude")
+#         lat = content.get("latitude")
+#
+#         if lon is None or lat is None:
+#             await self.send_json({"error": "Koordinatalar majburiy."})
+#             return
+#
+#         try:
+#             lon = float(lon)
+#             lat = float(lat)
+#         except ValueError:
+#             await self.send_json({"error": "Koordinatalar noto‘g‘ri formatda."})
+#             return
+#
+#         key = f"worker_location:{self.user.id}"
+#         value = json.dumps({"lon": lon, "lat": lat})
+#
+#         # Tez ishlaydigan Redis yozuvi (1 daqiqa TTL bilan)
+#         await WorkerLocationConsumer.redis.set(key, value, ex=600)
+#         print(f"✅ Redisga yozildi: {key} -> {value}")  # 👈 debug uchun
+#
+#         await self.send_json({
+#             "detail": "Joylashuv Redisda yangilandi!",
+#             "longitude": lon,
+#             "latitude": lat
+#         })
+#
+#     async def disconnect(self, close_code):
+#         key = f"worker_location:{self.user.id}"
+#         data = await WorkerLocationConsumer.redis.get(key)
+#         if data:
+#             coords = json.loads(data)
+#             point = Point(coords["lon"], coords["lat"])
+#             await sync_to_async(self._save_point_to_db)(point)
+#
+#     def _save_point_to_db(self, point):
+#         self.user.point = point
+#         self.user.save(update_fields=["point"])
