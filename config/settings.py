@@ -2,6 +2,7 @@ import os
 from datetime import timedelta
 from pathlib import Path
 from django.utils.translation import gettext_lazy as _
+from decouple import config
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-sfxtedi$dh=#e!n=#nwmi35^(26o0(z556j5-7d+^%e#n3t6$z'
@@ -202,7 +203,6 @@ NEAREST_WORKER_MIN_RADIUS_KM = 1
 NEAREST_WORKER_MAX_RADIUS_KM = 30
 NEAREST_WORKER_MAX_RESULTS = 20
 
-MYID_BASE_URL = os.getenv("MYID_BASE_URL", "https://api.myid.uz/api/v1/ekyc")
-MYID_CLIENT_ID = os.getenv("MYID_CLIENT_ID", "")
-MYID_CLIENT_SECRET = os.getenv("MYID_CLIENT_SECRET", "")
-MYID_REDIRECT_URL = os.getenv("MYID_REDIRECT_URL", "")
+MYID_BASE_URL = config("MYID_BASE_URL")
+MYID_CLIENT_ID = config("MYID_CLIENT_ID")
+MYID_CLIENT_SECRET = config("MYID_CLIENT_SECRET")

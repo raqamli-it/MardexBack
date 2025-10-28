@@ -1,34 +1,39 @@
-import base64
-import requests
-from django.conf import settings
-
-def _get_auth_header():
-    auth_str = f"{settings.MYID_CLIENT_ID}:{settings.MYID_CLIENT_SECRET}"
-    base64_auth = base64.b64encode(auth_str.encode()).decode()
-    return {"Authorization": f"Basic {base64_auth}"}
-
-def start_verification(data):
-    """MyID bilan shaxsni tekshirishni boshlaydi"""
-    url = f"{settings.MYID_BASE_URL}/start-verification"
-    headers = {"Content-Type": "application/json", **_get_auth_header()}
-
-    payload = {
-        "document_series": data["passport_seria"],
-        "document_number": data["passport_number"],
-        "birth_date": data["birth_date"],  # "YYYY-MM-DD"
-        "pinfl": data["jshshir"],
-        "citizenship": data["citizenship"],  # "UZ" yoki "FOREIGN"
-        "redirect_url": settings.MYID_REDIRECT_URL
-    }
-
-    response = requests.post(url, json=payload, headers=headers)
-    response.raise_for_status()
-    return response.json()
-
-def get_verification_result(verification_id):
-    """Tasdiqlashdan keyingi natijani olish"""
-    url = f"{settings.MYID_BASE_URL}/verification-result/{verification_id}"
-    headers = _get_auth_header()
-    response = requests.get(url, headers=headers)
-    response.raise_for_status()
-    return response.json()
+# import requests
+# import os
+#
+# MYID_BASE_URL = os.getenv("MYID_BASE_URL")
+# CLIENT_ID = os.getenv("MYID_CLIENT_ID")
+# CLIENT_SECRET = os.getenv("MYID_CLIENT_SECRET")
+#
+# def get_access_token():
+#     url = f"{MYID_BASE_URL}/auth/clients/access-token"
+#     data = {
+#         "client_id": CLIENT_ID,
+#         "client_secret": CLIENT_SECRET
+#     }
+#     res = requests.post(url, json=data)
+#     res.raise_for_status()
+#     return res.json()["access_token"]
+#
+#
+# def create_session(pass_data=None, birth_date=None, is_resident=True):
+#     access_token = get_access_token()
+#     url = f"{MYID_BASE_URL}/sdk/sessions"
+#     headers = {"Authorization": f"Bearer {access_token}"}
+#     data = {
+#         "pass_data": pass_data,
+#         "birth_date": birth_date,
+#         "is_resident": is_resident
+#     }
+#     res = requests.post(url, json=data, headers=headers)
+#     res.raise_for_status()
+#     return res.json()["session_id"]
+#
+#
+# def get_user_data(code):
+#     access_token = get_access_token()
+#     url = f"{MYID_BASE_URL}/sdk/data?code={code}"
+#     headers = {"Authorization": f"Bearer {access_token}"}
+#     res = requests.get(url, headers=headers)
+#     res.raise_for_status()
+#     return res.json()
