@@ -13,16 +13,15 @@ from client.serializer import OrderSerializer
 from job.models import Job, CategoryJob
 from job.serializer import JobSerializer, CategoryJobSerializer
 from .models import WorkerNews
-from .serializers import WorkerRegistrationSerializer, WorkerLoginSerializer, \
-    WorkerPasswordChangeSerializer, UserUpdateSerializer, \
-    WorkerImageSerializer, WorkerJobSerializer, WorkerPhoneUpdateSerializer, WorkerNewsSerializer, \
-    WorkerUpdateSerializer, WorkerImageDeleteSerializer, WorkerActiveSerializer
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from users.models import AbstractUser
 from django.contrib.auth import get_user_model
 from job.models import City, Region
-from .serializers import CitySerializer, RegionSerializer
+from .serializers import CitySerializer, RegionSerializer, WorkerRegistrationSerializer, WorkerLoginSerializer, \
+    WorkerPasswordChangeSerializer, WorkerJobSerializer, WorkerPhoneUpdateSerializer, WorkerNewsSerializer, \
+    WorkerUpdateSerializer, WorkerImageSerializer, WorkerImageDeleteSerializer, WorkerActiveSerializer, \
+    UserUpdateSerializer
 
 User = get_user_model()
 
@@ -107,7 +106,6 @@ class JobListByCategoryView(APIView):
         return Response(result)
 
 
-# worker uchun tangalagan ishlarini upfate va get qilish uchun classlar
 class UpdateUserJobView(UpdateAPIView):
     queryset = AbstractUser.objects.all()
     serializer_class = UserUpdateSerializer

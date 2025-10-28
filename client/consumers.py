@@ -423,7 +423,7 @@ class WorkerLocationConsumer(AsyncJsonWebsocketConsumer):
 
         # TTL ni o‘chiramiz → qiymat har doim mavjud bo‘ladi (agar update kelmasa ham)
         await WorkerLocationConsumer.redis.set(key, value)
-        print(f"✅ Redisga yozildi: {key} -> {value}")
+        print(f" Redisga yozildi: {key} -> {value}")
 
         await self.send_json({
             "detail": "Joylashuv Redisda yangilandi!",
