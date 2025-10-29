@@ -26,7 +26,7 @@ def get_myid_access_token():
 
     result = res.json()
     _cached_token = result.get("access_token")
-    _token_expiry = now + result.get("expires_in", 3600) - 60  # 1 daqiqa xavfsizlik uchun
+    _token_expiry = now + result.get("expires_in", 3600) - 60  # 1 daqiqa xavfsizlik uchun.
 
     return _cached_token
 
