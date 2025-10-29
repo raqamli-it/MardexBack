@@ -19,7 +19,8 @@ def get_myid_access_token():
         "client_secret": settings.MYID_CLIENT_SECRET
     }
 
-    res = requests.post(url, data=data)
+    # Shu yerda json= ishlatiladi, form-data emas
+    res = requests.post(url, json=data)
     if res.status_code != 200:
         raise Exception(f"Token olishda xatolik: {res.text}")
 
@@ -28,3 +29,4 @@ def get_myid_access_token():
     _token_expiry = now + result.get("expires_in", 3600) - 60  # 1 daqiqa xavfsizlik uchun
 
     return _cached_token
+
