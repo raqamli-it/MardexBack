@@ -27,8 +27,15 @@ RUN pip install --upgrade pip && pip install --no-cache-dir -r requirements.txt
 RUN mkdir -p /Mardex/staticfiles
 RUN chmod 755 /Mardex/staticfiles
 
+# .env faylni kiritamiz
+COPY .env /Mardex/.env
+
 # Copy project files
 COPY . /Mardex/
+
+
+# Endi .env mavjud bo‘lgani uchun collectstatic ishlaydi
+RUN python manage.py collectstatic --noinput
 
 # Collect static files
 RUN python manage.py collectstatic --noinput
@@ -40,4 +47,4 @@ ENV DJANGO_SETTINGS_MODULE=config.settings
 EXPOSE 8000
 
 # Run migrations and start Daphne server
-CMD ["sh", "-c", "python manage.py migrate && daphne -b 0.0.0.0 -p 8000 einvestment.asgi:application"]
+CMD ["sh", "-c", "python manage.py migrate && daphne -b 0.0.0.0 -p 8000 config.asgi:application"]
