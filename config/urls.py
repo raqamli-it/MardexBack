@@ -29,6 +29,7 @@ urlpatterns = [
     path('worker/', include('worker.urls')),
     path('job/', include('job.urls')),
     path('client/', include('client.urls')),
+    path('users/', include('users.urls')),
 ]
 if settings.DEBUG:  # Faqat DEBUG rejimida ishlaydi
     urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

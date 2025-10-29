@@ -12,7 +12,7 @@ def get_myid_access_token():
     if _cached_token and now < _token_expiry:
         return _cached_token  # Token hali yaroqli
 
-    url = f"{settings.MYID_BASE_URL}/oauth/token"
+    url = f"{settings.MYID_BASE_URL}/clients/access-token"
     data = {
         "grant_type": "client_credentials",
         "client_id": settings.MYID_CLIENT_ID,
