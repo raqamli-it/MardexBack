@@ -27,12 +27,8 @@ RUN pip install --upgrade pip && pip install --no-cache-dir -r requirements.txt
 RUN mkdir -p /Mardex/staticfiles
 RUN chmod 755 /Mardex/staticfiles
 
-# .env faylni kiritamiz
-COPY .env /Mardex/.env
-
 # Copy project files
 COPY . /Mardex/
-
 
 # Endi .env mavjud bo‘lgani uchun collectstatic ishlaydi
 RUN python manage.py collectstatic --noinput
