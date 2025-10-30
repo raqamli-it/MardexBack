@@ -1,7 +1,7 @@
 import requests
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from django.conf import settings
 
 from .myid_helper import get_myid_access_token
@@ -67,7 +67,7 @@ class MyIDSessionStatusView(APIView):
     """
      Sessiyaning holatini tekshirish (mobil SDK tugagan yoki yo‘q)
     """
-    # permission_classes = [IsMyIDTokenValid]
+    permission_classes = [AllowAny]
 
     def post(self, request):
         serializer = MyIDSessionStatusSerializer(data=request.data)
