@@ -27,7 +27,7 @@ class MyIDCreateSessionView(APIView):
     """
      Sessiya yaratish — MyID orqali shaxsni tasdiqlashni boshlash
     """
-    permission_classes = []
+    permission_classes = [AllowAny]
 
     def post(self, request):
         serializer = MyIDSessionCreateSerializer(data=request.data)
@@ -95,7 +95,7 @@ class MyIDVerifyView(APIView):
     """
      Foydalanuvchini MyID code orqali tasdiqlash
     """
-    permission_classes = [IsMyIDTokenValid]
+    permission_classes = [AllowAny]
 
     def post(self, request):
         serializer = MyIDVerifySerializer(data=request.data)
