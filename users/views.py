@@ -5,6 +5,7 @@ from rest_framework.permissions import IsAuthenticated
 from django.conf import settings
 
 from .myid_helper import get_myid_access_token
+from .permission import IsMyIDTokenValid
 from .serializer import (
     MyIDSessionCreateSerializer,
     MyIDVerifySerializer,
@@ -26,7 +27,7 @@ class MyIDCreateSessionView(APIView):
     """
      Sessiya yaratish — MyID orqali shaxsni tasdiqlashni boshlash
     """
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsMyIDTokenValid]
 
     def post(self, request):
         serializer = MyIDSessionCreateSerializer(data=request.data)
@@ -66,7 +67,7 @@ class MyIDSessionStatusView(APIView):
     """
      Sessiyaning holatini tekshirish (mobil SDK tugagan yoki yo‘q)
     """
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsMyIDTokenValid]
 
     def post(self, request):
         serializer = MyIDSessionStatusSerializer(data=request.data)
@@ -91,7 +92,7 @@ class MyIDVerifyView(APIView):
     """
      Foydalanuvchini MyID code orqali tasdiqlash
     """
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsMyIDTokenValid]
 
     def post(self, request):
         serializer = MyIDVerifySerializer(data=request.data)
