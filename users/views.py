@@ -64,9 +64,7 @@ class MyIDCreateSessionView(APIView):
 
 #  Session statusni tekshirish (session_id orqali)
 class MyIDSessionStatusView(APIView):
-    """
-     Sessiyaning holatini tekshirish (mobil SDK tugagan yoki yo‘q)
-    """
+
     permission_classes = [AllowAny]
 
     def post(self, request):
@@ -79,8 +77,19 @@ class MyIDSessionStatusView(APIView):
         headers = {"Authorization": f"Bearer {access_token}"}
 
         res = requests.get(url, headers=headers)
+
+        # Debug uchun
+        print("🔹 URL:", url)
+        print("🔹 Access token:", access_token)
+        print("🔹 Response status:", res.status_code)
+        print("🔹 Response text:", res.text)
+
         if res.status_code != 200:
-            return Response({"detail": "Session statusni olishda xatolik"}, status=400)
+            return Response({
+                "detail": "Session statusni olishda xatolik",
+                "myid_status_code": res.status_code,
+                "myid_response": res.text
+            }, status=res.status_code)
 
         return Response({
             "status": res.json().get("status"),
