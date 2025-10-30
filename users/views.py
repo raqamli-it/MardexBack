@@ -67,7 +67,7 @@ class MyIDSessionStatusView(APIView):
     """
      Sessiyaning holatini tekshirish (mobil SDK tugagan yoki yo‘q)
     """
-    permission_classes = [IsMyIDTokenValid]
+    # permission_classes = [IsMyIDTokenValid]
 
     def post(self, request):
         serializer = MyIDSessionStatusSerializer(data=request.data)
