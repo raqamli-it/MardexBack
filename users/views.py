@@ -73,16 +73,10 @@ class MyIDSessionStatusView(APIView):
         session_id = serializer.validated_data["session_id"]
 
         access_token = get_myid_access_token()
-        url = f"{settings.MYID_BASE_URL}/sdk/sessions/{session_id}/status"
+        url = f"{settings.MYID_BASE_URL}/sdk/sessions/{session_id}"
         headers = {"Authorization": f"Bearer {access_token}"}
 
         res = requests.get(url, headers=headers)
-
-        # Debug uchun
-        print("🔹 URL:", url)
-        print("🔹 Access token:", access_token)
-        print("🔹 Response status:", res.status_code)
-        print("🔹 Response text:", res.text)
 
         if res.status_code != 200:
             return Response({
