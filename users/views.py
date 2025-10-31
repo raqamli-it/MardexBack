@@ -127,6 +127,14 @@ class MyIDVerifyView(APIView):
         }, status=200)
 
 
+class MyIDClientCredentialsView(APIView):
+    permission_classes = [AllowAny]
+
+    def get(self, request):
+        return Response({
+            "client_hash_id": settings.MYID_CLIENT_HASH_ID,
+            "client_hash": settings.MYID_CLIENT_HASH,
+        })
 
 
 
