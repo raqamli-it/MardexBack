@@ -1,8 +1,10 @@
 import requests
+from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from django.conf import settings
+from rest_framework_simplejwt.tokens import RefreshToken
 
 from .myid_helper import get_myid_access_token
 from .permission import IsMyIDTokenValid
@@ -102,62 +104,74 @@ class MyIDVerifyView(APIView):
         serializer.is_valid(raise_exception=True)
         code = serializer.validated_data["code"]
 
+        # 1️⃣ Access token olish
         access_token = get_myid_access_token()
+        if not access_token:
+            return Response({"detail": "MyID tokenni olishda xatolik"}, status=status.HTTP_400_BAD_REQUEST)
+
+        # 2️⃣ MyID API orqali foydalanuvchi ma'lumotlarini olish
         url = f"{settings.MYID_BASE_URL}/v1/sdk/data?code={code}"
         headers = {"Authorization": f"Bearer {access_token}"}
-
         res = requests.get(url, headers=headers)
+
         if res.status_code != 200:
             return Response({
                 "detail": "Ma'lumot olishda xatolik",
                 "myid_status": res.status_code,
                 "myid_response": res.text,
                 "requested_url": url
-            }, status=res.status_code)
+            }, status=status.HTTP_400_BAD_REQUEST)
 
         data = res.json()
 
-        # MyID'dan kelgan ma'lumotlar
+        # 3️⃣ MyID'dan kelgan ma'lumotlarni olish
         pinfl = data.get("pinfl")
         first_name = data.get("first_name", "")
         last_name = data.get("last_name", "")
         passport_number = data.get("passport_number", "")
         birth_date = data.get("birth_date", "")
 
-        # Foydalanuvchini yaratish yoki yangilash
+        if not pinfl:
+            return Response({"detail": "PINFL mavjud emas MyID javobida"}, status=status.HTTP_400_BAD_REQUEST)
+
+        # 4️⃣ Foydalanuvchini yaratish yoki yangilash
         from django.contrib.auth import get_user_model
         User = get_user_model()
 
         user, created = User.objects.get_or_create(
             pinfl=pinfl,
             defaults={
-                "first_name": first_name,
-                "last_name": last_name,
-                "passport_number": passport_number,
-                "birth_date": birth_date
+                "full_name": f"{first_name} {last_name}",
+                "passport_seria": passport_number,
             }
         )
 
         if not created:
             # mavjud foydalanuvchini yangilash
-            user.first_name = first_name
-            user.last_name = last_name
-            user.passport_number = passport_number
-            user.birth_date = birth_date
+            user.full_name = f"{first_name} {last_name}"
+            user.passport_seria = passport_number
             user.save()
 
-        # Foydalanuvchi uchun JWT token yaratish
-        from rest_framework_simplejwt.tokens import RefreshToken
+        # JWT token yaratish
         refresh = RefreshToken.for_user(user)
 
+        #  Javob qaytarish
         return Response({
             "message": "User verified successfully",
-            "myid_data": data,
+            "created": created,
+            "user": {
+                "id": user.id,
+                "full_name": user.full_name,
+                "pinfl": user.pinfl,
+                "passport_seria": user.passport_seria,
+                "birth_date": birth_date
+            },
             "tokens": {
                 "refresh": str(refresh),
                 "access": str(refresh.access_token)
-            }
-        }, status=200)
+            },
+            "myid_data": data
+        }, status=status.HTTP_200_OK)
 
 
 class MyIDClientCredentialsView(APIView):
