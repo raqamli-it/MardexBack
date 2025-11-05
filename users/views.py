@@ -1,4 +1,5 @@
 import requests
+from django.contrib.auth import get_user_model
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -107,7 +108,10 @@ class MyIDVerifyView(APIView):
         # 1️⃣ Access token olish
         access_token = get_myid_access_token()
         if not access_token:
-            return Response({"detail": "MyID tokenni olishda xatolik"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"detail": "MyID tokenni olishda xatolik"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
         # 2️⃣ MyID API orqali foydalanuvchi ma'lumotlarini olish
         url = f"{settings.MYID_BASE_URL}/v1/sdk/data?code={code}"
@@ -122,22 +126,22 @@ class MyIDVerifyView(APIView):
                 "requested_url": url
             }, status=status.HTTP_400_BAD_REQUEST)
 
-        data = res.json()
+        response_data = res.json()
 
-        # 3️⃣ MyID'dan kelgan ma'lumotlarni olish
-        pinfl = data.get("pinfl")
-        first_name = data.get("first_name", "")
-        last_name = data.get("last_name", "")
-        passport_number = data.get("passport_number", "")
-        birth_date = data.get("birth_date", "")
+        # 3️⃣ Nested strukturasidan foydalanuvchi ma'lumotlarini olish
+        common_data = response_data.get("data", {}).get("profile", {}).get("common_data", {})
+
+        pinfl = common_data.get("pinfl")
+        first_name = common_data.get("first_name", "")
+        last_name = common_data.get("last_name", "")
+        passport_number = common_data.get("pass_data") or common_data.get("doc_number", "")
+        birth_date = common_data.get("birth_date", "")
 
         if not pinfl:
             return Response({"detail": "PINFL mavjud emas MyID javobida"}, status=status.HTTP_400_BAD_REQUEST)
 
         # 4️⃣ Foydalanuvchini yaratish yoki yangilash
-        from django.contrib.auth import get_user_model
         User = get_user_model()
-
         user, created = User.objects.get_or_create(
             pinfl=pinfl,
             defaults={
@@ -152,10 +156,10 @@ class MyIDVerifyView(APIView):
             user.passport_seria = passport_number
             user.save()
 
-        # JWT token yaratish
+        # 5️⃣ JWT token yaratish
         refresh = RefreshToken.for_user(user)
 
-        #  Javob qaytarish
+        # 6️⃣ Javob qaytarish
         return Response({
             "message": "User verified successfully",
             "created": created,
@@ -170,7 +174,7 @@ class MyIDVerifyView(APIView):
                 "refresh": str(refresh),
                 "access": str(refresh.access_token)
             },
-            "myid_data": data
+            "myid_data": response_data
         }, status=status.HTTP_200_OK)
 
 
