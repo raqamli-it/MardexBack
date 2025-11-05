@@ -108,7 +108,12 @@ class MyIDVerifyView(APIView):
 
         res = requests.get(url, headers=headers)
         if res.status_code != 200:
-            return Response({"detail": "Ma'lumot olishda xatolik"}, status=400)
+            return Response({
+                "detail": "Ma'lumot olishda xatolik",
+                "myid_status": res.status_code,
+                "myid_response": res.text,
+                "requested_url": url
+            }, status=res.status_code)
 
         data = res.json()
 
