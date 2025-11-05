@@ -93,14 +93,14 @@ class MyIDSessionStatusView(APIView):
 
 class MyIDVerifyView(APIView):
     """
-     Foydalanuvchini MyID code orqali tasdiqlash
+    Foydalanuvchini MyID code orqali tasdiqlash
     """
     permission_classes = [AllowAny]
 
     def post(self, request):
         serializer = MyIDVerifySerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        code = serializer.validated_data['code']
+        code = serializer.validated_data["code"]
 
         access_token = get_myid_access_token()
         url = f"{settings.MYID_BASE_URL}/v1/sdk/data?code={code}"
@@ -112,18 +112,47 @@ class MyIDVerifyView(APIView):
 
         data = res.json()
 
-        # Foydalanuvchi ma’lumotlarini saqlash (namuna)
-        user = request.user
-        user.first_name = data.get("first_name")
-        user.last_name = data.get("last_name")
-        user.passport_number = data.get("passport_number")
-        user.birth_date = data.get("birth_date")
-        user.pinfl = data.get("pinfl")
-        user.save()
+        # MyID'dan kelgan ma'lumotlar
+        pinfl = data.get("pinfl")
+        first_name = data.get("first_name", "")
+        last_name = data.get("last_name", "")
+        passport_number = data.get("passport_number", "")
+        birth_date = data.get("birth_date", "")
+
+        # Foydalanuvchini yaratish yoki yangilash
+        from django.contrib.auth import get_user_model
+        User = get_user_model()
+
+        user, created = User.objects.get_or_create(
+            pinfl=pinfl,
+            defaults={
+                "first_name": first_name,
+                "last_name": last_name,
+                "passport_number": passport_number,
+                "birth_date": birth_date,
+                "username": pinfl,  # agar username kerak bo‘lsa
+            }
+        )
+
+        if not created:
+            # mavjud foydalanuvchini yangilash
+            user.first_name = first_name
+            user.last_name = last_name
+            user.passport_number = passport_number
+            user.birth_date = birth_date
+            user.save()
+
+        # Foydalanuvchi uchun JWT token yaratish
+        from rest_framework_simplejwt.tokens import RefreshToken
+        refresh = RefreshToken.for_user(user)
 
         return Response({
             "message": "User verified successfully",
-            "myid_data": data
+            "myid_data": data,
+            "tokens": {
+                "refresh": str(refresh),
+                "access": str(refresh.access_token)
+            }
         }, status=200)
 
 
