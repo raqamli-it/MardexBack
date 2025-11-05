@@ -134,7 +134,7 @@ class MyIDVerifyView(APIView):
                 "first_name": first_name,
                 "last_name": last_name,
                 "passport_number": passport_number,
-                "birth_date": birth_date,
+                "birth_date": birth_date
             }
         )
 
