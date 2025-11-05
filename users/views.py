@@ -135,7 +135,6 @@ class MyIDVerifyView(APIView):
                 "last_name": last_name,
                 "passport_number": passport_number,
                 "birth_date": birth_date,
-                "username": pinfl,  # agar username kerak bo‘lsa
             }
         )
 

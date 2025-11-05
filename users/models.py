@@ -92,6 +92,7 @@ class AbstractUser(AbstractBaseUser, PermissionsMixin):
     is_online = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     point = gis_models.PointField(srid=4326, default=Point(69.279759, 41.311081) )
+    pinfl = models.CharField(max_length=14, null=True, blank=True)
 
     objects = UserManager()
 
