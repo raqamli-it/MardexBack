@@ -153,6 +153,7 @@ class MyIDVerifyView(APIView):
                 "passport_seria": passport_number,
                 "phone": phone,
                 "role": role,
+                "is_verified": True,
 
             }
         )
