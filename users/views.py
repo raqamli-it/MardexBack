@@ -136,9 +136,13 @@ class MyIDVerifyView(APIView):
         last_name = common_data.get("last_name", "")
         passport_number = common_data.get("pass_data") or common_data.get("doc_number", "")
         birth_date = common_data.get("birth_date", "")
+        phone = common_data.get("phone") or f"unknown_{pinfl}"  # <---- MUHIM QO‘SHIMCHA
+        role = "client"  # yoki foydalanuvchining turiga qarab
+
+
 
         if not pinfl:
-            return Response({"detail": "PINFL mavjud emas MyID javobida"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"detail": "PINFL mavjud emas MyID javobida"}, status=400)
 
         # Foydalanuvchini yaratish yoki yangilash
         User = get_user_model()
@@ -147,6 +151,9 @@ class MyIDVerifyView(APIView):
             defaults={
                 "full_name": f"{first_name} {last_name}",
                 "passport_seria": passport_number,
+                "phone": phone,
+                "role": role,
+
             }
         )
 
