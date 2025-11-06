@@ -95,9 +95,6 @@ class MyIDSessionStatusView(APIView):
 
 
 class MyIDVerifyView(APIView):
-    """
-    Foydalanuvchini MyID code orqali tasdiqlash
-    """
     permission_classes = [AllowAny]
 
     def post(self, request):
@@ -105,15 +102,10 @@ class MyIDVerifyView(APIView):
         serializer.is_valid(raise_exception=True)
         code = serializer.validated_data["code"]
 
-        #  Access token olish
         access_token = get_myid_access_token()
         if not access_token:
-            return Response(
-                {"detail": "MyID tokenni olishda xatolik"},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+            return Response({"detail": "MyID tokenni olishda xatolik"}, status=400)
 
-        # MyID API orqali foydalanuvchi ma'lumotlarini olish
         url = f"{settings.MYID_BASE_URL}/v1/sdk/data?code={code}"
         headers = {"Authorization": f"Bearer {access_token}"}
         res = requests.get(url, headers=headers)
@@ -123,12 +115,9 @@ class MyIDVerifyView(APIView):
                 "detail": "Ma'lumot olishda xatolik",
                 "myid_status": res.status_code,
                 "myid_response": res.text,
-                "requested_url": url
-            }, status=status.HTTP_400_BAD_REQUEST)
+            }, status=400)
 
         response_data = res.json()
-
-        # Nested strukturasidan foydalanuvchi ma'lumotlarini olish
         common_data = response_data.get("data", {}).get("profile", {}).get("common_data", {})
 
         pinfl = common_data.get("pinfl")
@@ -136,15 +125,12 @@ class MyIDVerifyView(APIView):
         last_name = common_data.get("last_name", "")
         passport_number = common_data.get("pass_data") or common_data.get("doc_number", "")
         birth_date = common_data.get("birth_date", "")
-        phone = common_data.get("phone") or f"unknown_{pinfl}"  # <---- MUHIM QO‘SHIMCHA
-        role = "client"  # yoki foydalanuvchining turiga qarab
-
-
+        phone = common_data.get("phone") or f"unknown_{pinfl}"
+        role = "client"
 
         if not pinfl:
             return Response({"detail": "PINFL mavjud emas MyID javobida"}, status=400)
 
-        # Foydalanuvchini yaratish yoki yangilash
         User = get_user_model()
         user, created = User.objects.get_or_create(
             pinfl=pinfl,
@@ -153,22 +139,18 @@ class MyIDVerifyView(APIView):
                 "passport_seria": passport_number,
                 "phone": phone,
                 "role": role,
-                "is_verified": True,
-
+                "is_verified": True,  # ✅
             }
         )
 
-        if not created:
-            # mavjud foydalanuvchini yangilash
-            user.full_name = f"{first_name} {last_name}"
-            user.passport_seria = passport_number
-            user.is_verified = True
-            user.save()
+        # Har doim yangilab qo‘yamiz
+        user.is_verified = True
+        user.full_name = f"{first_name} {last_name}"
+        user.passport_seria = passport_number
+        user.save()
 
-        # JWT token yaratish
         refresh = RefreshToken.for_user(user)
 
-        # Javob qaytarish
         return Response({
             "message": "User verified successfully",
             "created": created,
@@ -177,14 +159,15 @@ class MyIDVerifyView(APIView):
                 "full_name": user.full_name,
                 "pinfl": user.pinfl,
                 "passport_seria": user.passport_seria,
-                "birth_date": birth_date
+                "birth_date": birth_date,
+                "is_verified": user.is_verified,
             },
             "tokens": {
                 "refresh": str(refresh),
-                "access": str(refresh.access_token)
+                "access": str(refresh.access_token),
             },
             "myid_data": response_data
-        }, status=status.HTTP_200_OK)
+        }, status=200)
 
 
 class MyIDClientCredentialsView(APIView):
