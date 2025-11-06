@@ -98,7 +98,7 @@ class MyIDVerifyView(APIView):
     """
     Foydalanuvchini MyID code orqali tasdiqlash
     """
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
 
     def post(self, request):
         serializer = MyIDVerifySerializer(data=request.data)
