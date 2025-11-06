@@ -66,7 +66,7 @@ class AbstractUser(AbstractBaseUser, PermissionsMixin):
     gender = models.CharField(max_length=10, choices=GENDER_CHOICES, default='Male')
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='idle')
     full_name = models.CharField(max_length=255)
-    phone = models.CharField(max_length=15)
+    phone = models.CharField(max_length=25)
     region = models.ForeignKey(Region, on_delete=models.CASCADE, null=True, blank=True)
     city = models.ForeignKey(City, on_delete=models.CASCADE, null=True, blank=True)
     passport_scan = models.ImageField(upload_to=image_create_time, blank=True, null=True)
