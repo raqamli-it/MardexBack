@@ -98,7 +98,7 @@ class MyIDVerifyView(APIView):
     """
     Foydalanuvchini MyID code orqali tasdiqlash
     """
-    permission_classes = [AllowAny]
+    permission_classes = [IsAuthenticated]
 
     def post(self, request):
         serializer = MyIDVerifySerializer(data=request.data)
@@ -198,30 +198,23 @@ class MyIDClientCredentialsView(APIView):
 
 
 
-# from rest_framework.views import APIView
-# from rest_framework.response import Response
-# from rest_framework import status
-#
-# from users.myid_service import create_session, get_user_data
-#
-#
-# class MyIDSessionView(APIView):
-#     def post(self, request):
-#         pass_data = request.data.get("pass_data")
-#         birth_date = request.data.get("birth_date")
-#         is_resident = request.data.get("is_resident", True)
-#         try:
-#             session_id = create_session(pass_data, birth_date, is_resident)
-#             return Response({"session_id": session_id}, status=status.HTTP_200_OK)
-#         except Exception as e:
-#             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
-#
-#
-# class MyIDVerifyView(APIView):
-#     def post(self, request):
-#         code = request.data.get("code")
-#         try:
-#             data = get_user_data(code)
-#             return Response(data, status=status.HTTP_200_OK)
-#         except Exception as e:
-#             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+class MeView(APIView):
+    """
+    Tasdiqlangan foydalanuvchi ma'lumotlarini olish
+    """
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+
+        if not user.is_verified:
+            return Response({"detail": "Foydalanuvchi tasdiqlanmagan"}, status=403)
+
+        return Response({
+            "id": user.id,
+            "full_name": user.full_name,
+            "pinfl": user.pinfl,
+            "passport_seria": user.passport_seria,
+            "birth_date": user.birth_date,
+            "is_verified": user.is_verified
+        }, status=200)
