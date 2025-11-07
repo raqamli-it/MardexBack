@@ -103,8 +103,6 @@ class MyIDVerifyView(APIView):
         serializer.is_valid(raise_exception=True)
         code = serializer.validated_data["code"]
 
-        role = request.data.get("role", request.user.role or "client")
-
         access_token = get_myid_access_token()
         if not access_token:
             return Response({"detail": "MyID tokenni olishda xatolik"}, status=400)
@@ -132,12 +130,13 @@ class MyIDVerifyView(APIView):
         if not pinfl:
             return Response({"detail": "PINFL mavjud emas MyID javobida"}, status=400)
 
-        user = request.user  # 👈 endi bu user 164 bo‘ladi
+        user = request.user
         user.pinfl = pinfl
         user.full_name = f"{first_name} {last_name}"
         user.passport_seria = passport_number
         user.birth_date = birth_date
         user.is_verified = True
+        user.myid_data = response_data
         user.save()
 
         refresh = RefreshToken.for_user(user)
@@ -157,7 +156,7 @@ class MyIDVerifyView(APIView):
                 "refresh": str(refresh),
                 "access": str(refresh.access_token)
             },
-            "myid_data": response_data
+            "myid_data": user.myid_data  # endi bazadan olinadi
         }, status=200)
 
 
