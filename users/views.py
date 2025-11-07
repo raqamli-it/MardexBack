@@ -252,21 +252,52 @@ class MyIDClientCredentialsView(APIView):
 
 class MeView(APIView):
     """
-    Tasdiqlangan foydalanuvchi ma'lumotlarini olish
+    Tasdiqlangan foydalanuvchi ma'lumotlarini olish (MyID verify formatida)
     """
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
         user = request.user
 
+        # Foydalanuvchi tasdiqlanmagan bo‘lsa
         if not user.is_verified:
             return Response({"detail": "Foydalanuvchi tasdiqlanmagan"}, status=403)
 
-        return Response({
+        # Tokenlar yaratish
+        refresh = RefreshToken.for_user(user)
+
+        # Tug‘ilgan sana (MyID dagidek bo‘lishi uchun)
+        birth_date = None
+        if user.myid_data:
+            birth_date = (
+                user.myid_data.get("data", {})
+                .get("profile", {})
+                .get("common_data", {})
+                .get("birth_date")
+            )
+
+        # User ma'lumotlari
+        user_data = {
             "id": user.id,
             "full_name": user.full_name,
             "pinfl": user.pinfl,
-            "passport_seria": user.passport_seria,
-            "birth_date": user.birth_date,
-            "is_verified": user.is_verified
-        }, status=200)
+            "passport_seria": user.passport_seria or "",
+            "birth_date": birth_date,
+            "phone": user.phone,
+            "is_verified": user.is_verified,
+        }
+
+        # Yakuniy javob
+        return Response(
+            {
+                "message": "User verified successfully",
+                "user": user_data,
+                "tokens": {
+                    "refresh": str(refresh),
+                    "access": str(refresh.access_token),
+                },
+                "myid_data": user.myid_data,  # JSONField dan to‘g‘ridan-to‘g‘ri
+            },
+            status=200,
+        )
+
