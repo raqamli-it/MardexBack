@@ -22,7 +22,7 @@ class ProfileAdmin(OSMGeoAdmin):  # GIS xarita widgeti uchun OSMGeoAdmin ishlata
     search_fields = ['id', 'full_name_uz', 'phone']
     fields = ['full_name_uz', 'full_name_ru', 'full_name_en',
               'description_uz', 'description_ru', 'description_en',
-              'role', 'gender', 'point', 'status', 'is_worker_active', 'is_verified']
+              'role', 'gender', 'point', 'status', 'is_worker_active', 'is_verified', "myid_data"]
     inlines = [WorkerImageInline]
     # Xarita o'lchamlari
     map_width = 1100
