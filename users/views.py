@@ -1,6 +1,4 @@
 import requests
-from django.contrib.auth import get_user_model
-from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
@@ -8,7 +6,6 @@ from django.conf import settings
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from .myid_helper import get_myid_access_token
-from .permission import IsMyIDTokenValid
 from .serializer import (
     MyIDSessionCreateSerializer,
     MyIDVerifySerializer,
@@ -94,22 +91,24 @@ class MyIDSessionStatusView(APIView):
         }, status=200)
 
 
+
 class MyIDVerifyView(APIView):
-    permission_classes = [AllowAny]
+    """
+    Foydalanuvchini MyID orqali tasdiqlash
+    """
+    permission_classes = [IsAuthenticated]  # MUHIM — endi JWT kerak bo‘ladi
 
     def post(self, request):
         serializer = MyIDVerifySerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         code = serializer.validated_data["code"]
 
-        role = request.data.get("role", "client")
+        role = request.data.get("role", request.user.role or "client")
 
-        # MyID token olish
         access_token = get_myid_access_token()
         if not access_token:
             return Response({"detail": "MyID tokenni olishda xatolik"}, status=400)
 
-        # Ma’lumot olish
         url = f"{settings.MYID_BASE_URL}/v1/sdk/data?code={code}"
         headers = {"Authorization": f"Bearer {access_token}"}
         res = requests.get(url, headers=headers)
@@ -128,55 +127,23 @@ class MyIDVerifyView(APIView):
         last_name = common_data.get("last_name", "")
         passport_number = common_data.get("pass_data") or common_data.get("doc_number", "")
         birth_date = common_data.get("birth_date", "")
-        phone = common_data.get("phone") or f"unknown_{pinfl}"
+        phone = common_data.get("phone") or request.user.phone
 
         if not pinfl:
             return Response({"detail": "PINFL mavjud emas MyID javobida"}, status=400)
 
-        User = get_user_model()
+        user = request.user  # 👈 endi bu user 164 bo‘ladi
+        user.pinfl = pinfl
+        user.full_name = f"{first_name} {last_name}"
+        user.passport_seria = passport_number
+        user.birth_date = birth_date
+        user.is_verified = True
+        user.save()
 
-        # 🧠 1️⃣ Avval request.user dan tekshiramiz (agar foydalanuvchi allaqachon login bo‘lgan bo‘lsa)
-        user = getattr(request, "user", None)
-        if user and user.is_authenticated:
-            user.pinfl = pinfl
-            user.full_name = f"{first_name} {last_name}"
-            user.passport_seria = passport_number
-            user.is_verified = True
-            user.role = role
-            user.save()
-            created = False
-
-        else:
-            # 🧠 2️⃣ Aks holda phone yoki pinfl orqali tekshiramiz
-            existing_user = User.objects.filter(phone=phone).first() or User.objects.filter(pinfl=pinfl).first()
-            if existing_user:
-                existing_user.pinfl = pinfl
-                existing_user.full_name = f"{first_name} {last_name}"
-                existing_user.passport_seria = passport_number
-                existing_user.is_verified = True
-                existing_user.role = role
-                existing_user.save()
-                user = existing_user
-                created = False
-            else:
-                # 🧠 3️⃣ Hech biri topilmasa yangi yaratamiz
-                user, created = User.objects.get_or_create(
-                    pinfl=pinfl,
-                    defaults={
-                        "full_name": f"{first_name} {last_name}",
-                        "passport_seria": passport_number,
-                        "phone": phone,
-                        "role": role,
-                        "is_verified": True,
-                    },
-                )
-
-        # Token yaratish
         refresh = RefreshToken.for_user(user)
 
         return Response({
-            "message": "Foydalanuvchi tasdiqlandi",
-            "created": created,
+            "message": "User verified successfully",
             "user": {
                 "id": user.id,
                 "full_name": user.full_name,
@@ -184,15 +151,15 @@ class MyIDVerifyView(APIView):
                 "passport_seria": user.passport_seria,
                 "birth_date": birth_date,
                 "phone": user.phone,
-                "role": user.role,
-                "is_verified": user.is_verified,
+                "is_verified": user.is_verified
             },
             "tokens": {
                 "refresh": str(refresh),
-                "access": str(refresh.access_token),
+                "access": str(refresh.access_token)
             },
             "myid_data": response_data
         }, status=200)
+
 
 
 # class MyIDVerifyView(APIView):
