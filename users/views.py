@@ -102,21 +102,27 @@ class MyIDVerifyView(APIView):
         serializer.is_valid(raise_exception=True)
         code = serializer.validated_data["code"]
 
+        # Role ni foydalanuvchidan olish (client yoki worker)
+        role = request.data.get("role", "client")
+
+        # MyID access token olish
         access_token = get_myid_access_token()
         if not access_token:
             return Response({"detail": "MyID tokenni olishda xatolik"}, status=400)
 
+        # MyID dan ma'lumot olish
         url = f"{settings.MYID_BASE_URL}/v1/sdk/data?code={code}"
         headers = {"Authorization": f"Bearer {access_token}"}
         res = requests.get(url, headers=headers)
 
         if res.status_code != 200:
             return Response({
-                "detail": "Ma'lumot olishda xatolik",
+                "detail": "MyID ma'lumot olishda xatolik",
                 "myid_status": res.status_code,
                 "myid_response": res.text,
             }, status=400)
 
+        # MyID javobini tahlil qilish
         response_data = res.json()
         common_data = response_data.get("data", {}).get("profile", {}).get("common_data", {})
 
@@ -126,33 +132,43 @@ class MyIDVerifyView(APIView):
         passport_number = common_data.get("pass_data") or common_data.get("doc_number", "")
         birth_date = common_data.get("birth_date", "")
         phone = common_data.get("phone") or f"unknown_{pinfl}"
-        role = "client"
 
         if not pinfl:
             return Response({"detail": "PINFL mavjud emas MyID javobida"}, status=400)
 
         User = get_user_model()
-        user, created = User.objects.get_or_create(
-            pinfl=pinfl,
-            defaults={
-                "full_name": f"{first_name} {last_name}",
-                "passport_seria": passport_number,
-                "phone": phone,
-                "role": role,
-                "is_verified": True,  # ✅
-            }
-        )
 
-        # Har doim yangilab qo‘yamiz
-        user.is_verified = True
-        user.full_name = f"{first_name} {last_name}"
-        user.passport_seria = passport_number
-        user.save()
+        # 1️⃣ Avval tizimda shu telefon raqam bilan user borligini tekshiramiz
+        existing_user = User.objects.filter(phone=phone).first()
 
+        if existing_user:
+            # Mavjud foydalanuvchini yangilaymiz
+            existing_user.pinfl = pinfl
+            existing_user.full_name = f"{first_name} {last_name}"
+            existing_user.passport_seria = passport_number
+            existing_user.is_verified = True
+            existing_user.role = role
+            existing_user.save()
+            user = existing_user
+            created = False
+        else:
+            # 2️⃣ Aks holda PINFL asosida yangi foydalanuvchi yaratamiz
+            user, created = User.objects.get_or_create(
+                pinfl=pinfl,
+                defaults={
+                    "full_name": f"{first_name} {last_name}",
+                    "passport_seria": passport_number,
+                    "phone": phone,
+                    "role": role,
+                    "is_verified": True,
+                },
+            )
+
+        # Tokenlar generatsiyasi
         refresh = RefreshToken.for_user(user)
 
         return Response({
-            "message": "User verified successfully",
+            "message": "Foydalanuvchi tasdiqlandi",
             "created": created,
             "user": {
                 "id": user.id,
@@ -160,6 +176,8 @@ class MyIDVerifyView(APIView):
                 "pinfl": user.pinfl,
                 "passport_seria": user.passport_seria,
                 "birth_date": birth_date,
+                "phone": user.phone,
+                "role": user.role,
                 "is_verified": user.is_verified,
             },
             "tokens": {
@@ -168,6 +186,82 @@ class MyIDVerifyView(APIView):
             },
             "myid_data": response_data
         }, status=200)
+
+
+# class MyIDVerifyView(APIView):
+#     permission_classes = [AllowAny]
+#
+#     def post(self, request):
+#         serializer = MyIDVerifySerializer(data=request.data)
+#         serializer.is_valid(raise_exception=True)
+#         code = serializer.validated_data["code"]
+#
+#         access_token = get_myid_access_token()
+#         if not access_token:
+#             return Response({"detail": "MyID tokenni olishda xatolik"}, status=400)
+#
+#         url = f"{settings.MYID_BASE_URL}/v1/sdk/data?code={code}"
+#         headers = {"Authorization": f"Bearer {access_token}"}
+#         res = requests.get(url, headers=headers)
+#
+#         if res.status_code != 200:
+#             return Response({
+#                 "detail": "Ma'lumot olishda xatolik",
+#                 "myid_status": res.status_code,
+#                 "myid_response": res.text,
+#             }, status=400)
+#
+#         response_data = res.json()
+#         common_data = response_data.get("data", {}).get("profile", {}).get("common_data", {})
+#
+#         pinfl = common_data.get("pinfl")
+#         first_name = common_data.get("first_name", "")
+#         last_name = common_data.get("last_name", "")
+#         passport_number = common_data.get("pass_data") or common_data.get("doc_number", "")
+#         birth_date = common_data.get("birth_date", "")
+#         phone = common_data.get("phone") or f"unknown_{pinfl}"
+#         role = "client"
+#
+#         if not pinfl:
+#             return Response({"detail": "PINFL mavjud emas MyID javobida"}, status=400)
+#
+#         User = get_user_model()
+#         user, created = User.objects.get_or_create(
+#             pinfl=pinfl,
+#             defaults={
+#                 "full_name": f"{first_name} {last_name}",
+#                 "passport_seria": passport_number,
+#                 "phone": phone,
+#                 "role": role,
+#                 "is_verified": True,  # ✅
+#             }
+#         )
+#
+#         # Har doim yangilab qo‘yamiz
+#         user.is_verified = True
+#         user.full_name = f"{first_name} {last_name}"
+#         user.passport_seria = passport_number
+#         user.save()
+#
+#         refresh = RefreshToken.for_user(user)
+#
+#         return Response({
+#             "message": "User verified successfully",
+#             "created": created,
+#             "user": {
+#                 "id": user.id,
+#                 "full_name": user.full_name,
+#                 "pinfl": user.pinfl,
+#                 "passport_seria": user.passport_seria,
+#                 "birth_date": birth_date,
+#                 "is_verified": user.is_verified,
+#             },
+#             "tokens": {
+#                 "refresh": str(refresh),
+#                 "access": str(refresh.access_token),
+#             },
+#             "myid_data": response_data
+#         }, status=200)
 
 
 class MyIDClientCredentialsView(APIView):
