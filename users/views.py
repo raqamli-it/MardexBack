@@ -102,19 +102,17 @@ class MyIDVerifyView(APIView):
         serializer.is_valid(raise_exception=True)
         code = serializer.validated_data["code"]
 
-        # Role ni foydalanuvchidan olish (client yoki worker)
         role = request.data.get("role", "client")
 
-        # MyID access token olish
+        # MyID token olish
         access_token = get_myid_access_token()
         if not access_token:
             return Response({"detail": "MyID tokenni olishda xatolik"}, status=400)
 
-        # MyID dan ma'lumot olish
+        # Ma’lumot olish
         url = f"{settings.MYID_BASE_URL}/v1/sdk/data?code={code}"
         headers = {"Authorization": f"Bearer {access_token}"}
         res = requests.get(url, headers=headers)
-
         if res.status_code != 200:
             return Response({
                 "detail": "MyID ma'lumot olishda xatolik",
@@ -122,7 +120,6 @@ class MyIDVerifyView(APIView):
                 "myid_response": res.text,
             }, status=400)
 
-        # MyID javobini tahlil qilish
         response_data = res.json()
         common_data = response_data.get("data", {}).get("profile", {}).get("common_data", {})
 
@@ -138,33 +135,43 @@ class MyIDVerifyView(APIView):
 
         User = get_user_model()
 
-        # 1️⃣ Avval tizimda shu telefon raqam bilan user borligini tekshiramiz
-        existing_user = User.objects.filter(phone=phone).first()
-
-        if existing_user:
-            # Mavjud foydalanuvchini yangilaymiz
-            existing_user.pinfl = pinfl
-            existing_user.full_name = f"{first_name} {last_name}"
-            existing_user.passport_seria = passport_number
-            existing_user.is_verified = True
-            existing_user.role = role
-            existing_user.save()
-            user = existing_user
+        # 🧠 1️⃣ Avval request.user dan tekshiramiz (agar foydalanuvchi allaqachon login bo‘lgan bo‘lsa)
+        user = getattr(request, "user", None)
+        if user and user.is_authenticated:
+            user.pinfl = pinfl
+            user.full_name = f"{first_name} {last_name}"
+            user.passport_seria = passport_number
+            user.is_verified = True
+            user.role = role
+            user.save()
             created = False
-        else:
-            # 2️⃣ Aks holda PINFL asosida yangi foydalanuvchi yaratamiz
-            user, created = User.objects.get_or_create(
-                pinfl=pinfl,
-                defaults={
-                    "full_name": f"{first_name} {last_name}",
-                    "passport_seria": passport_number,
-                    "phone": phone,
-                    "role": role,
-                    "is_verified": True,
-                },
-            )
 
-        # Tokenlar generatsiyasi
+        else:
+            # 🧠 2️⃣ Aks holda phone yoki pinfl orqali tekshiramiz
+            existing_user = User.objects.filter(phone=phone).first() or User.objects.filter(pinfl=pinfl).first()
+            if existing_user:
+                existing_user.pinfl = pinfl
+                existing_user.full_name = f"{first_name} {last_name}"
+                existing_user.passport_seria = passport_number
+                existing_user.is_verified = True
+                existing_user.role = role
+                existing_user.save()
+                user = existing_user
+                created = False
+            else:
+                # 🧠 3️⃣ Hech biri topilmasa yangi yaratamiz
+                user, created = User.objects.get_or_create(
+                    pinfl=pinfl,
+                    defaults={
+                        "full_name": f"{first_name} {last_name}",
+                        "passport_seria": passport_number,
+                        "phone": phone,
+                        "role": role,
+                        "is_verified": True,
+                    },
+                )
+
+        # Token yaratish
         refresh = RefreshToken.for_user(user)
 
         return Response({
