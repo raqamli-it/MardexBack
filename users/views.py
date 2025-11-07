@@ -96,17 +96,19 @@ class MyIDVerifyView(APIView):
     """
     Foydalanuvchini MyID orqali tasdiqlash
     """
-    permission_classes = [IsAuthenticated]  # MUHIM — endi JWT kerak bo‘ladi
+    permission_classes = [IsAuthenticated]
 
     def post(self, request):
         serializer = MyIDVerifySerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         code = serializer.validated_data["code"]
 
+        # MyID tokenni olish
         access_token = get_myid_access_token()
         if not access_token:
             return Response({"detail": "MyID tokenni olishda xatolik"}, status=400)
 
+        # MyID API’dan ma’lumot olish
         url = f"{settings.MYID_BASE_URL}/v1/sdk/data?code={code}"
         headers = {"Authorization": f"Bearer {access_token}"}
         res = requests.get(url, headers=headers)
@@ -117,9 +119,11 @@ class MyIDVerifyView(APIView):
                 "myid_response": res.text,
             }, status=400)
 
+        # MyID'dan kelgan ma’lumot
         response_data = res.json()
         common_data = response_data.get("data", {}).get("profile", {}).get("common_data", {})
 
+        # Asosiy ma’lumotlarni ajratamiz
         pinfl = common_data.get("pinfl")
         first_name = common_data.get("first_name", "")
         last_name = common_data.get("last_name", "")
@@ -130,15 +134,17 @@ class MyIDVerifyView(APIView):
         if not pinfl:
             return Response({"detail": "PINFL mavjud emas MyID javobida"}, status=400)
 
+        # Foydalanuvchini olish va yangilash
         user = request.user
         user.pinfl = pinfl
         user.full_name = f"{first_name} {last_name}"
         user.passport_seria = passport_number
         user.birth_date = birth_date
         user.is_verified = True
-        user.myid_data = response_data
+        user.myid_data = response_data  # ✅ ENG MUHIM QO‘SHIMCHA
         user.save()
 
+        # Tokenlar
         refresh = RefreshToken.for_user(user)
 
         return Response({
@@ -158,6 +164,7 @@ class MyIDVerifyView(APIView):
             },
             "myid_data": user.myid_data  # endi bazadan olinadi
         }, status=200)
+
 
 
 
