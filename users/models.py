@@ -7,6 +7,8 @@ from django.db import models
 from django.utils import timezone
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 from job.models import Region, City, CategoryJob, Job
+from users.utils import decrypt_value, encrypt_value
+from django_cryptography.fields import encrypt
 
 
 def image_create_time(instance, filename):
@@ -129,3 +131,55 @@ class ClientProfile(models.Model):
 
     def __str__(self):
         return f"Client: {self.user.phone}"
+
+# Mardex userlari uchun db jadvali kartalar ulash uchun
+class UserCard(models.Model):
+    user = models.ForeignKey(AbstractUser, on_delete=models.CASCADE)
+    transaction_id = models.CharField(max_length=255)
+    status = models.CharField(max_length=30, default="pending")
+
+    card_id = models.CharField(max_length=255, null=True, blank=True)
+    pan = models.TextField(null=True, blank=True)
+    expiry = models.TextField(null=True, blank=True)
+    card_holder = models.TextField(null=True, blank=True)
+    phone = models.TextField(null=True, blank=True)
+    card_token = models.TextField(null=True, blank=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def save(self, *args, **kwargs):
+        """Sensitive fieldlarni shifrlash"""
+        if self.pan:
+            self.pan = encrypt_value(self.pan)
+        if self.expiry:
+            self.expiry = encrypt_value(self.expiry)
+        if self.card_holder:
+            self.card_holder = encrypt_value(self.card_holder)
+        if self.phone:
+            self.phone = encrypt_value(self.phone)
+        if self.card_token:
+            self.card_token = encrypt_value(self.card_token)
+        super().save(*args, **kwargs)
+
+    def get_decrypted_data(self) -> dict:
+        """Decrypted formatda ma’lumot olish"""
+        return {
+            "pan": decrypt_value(self.pan),
+            "expiry": decrypt_value(self.expiry),
+            "card_holder": decrypt_value(self.card_holder),
+            "phone": decrypt_value(self.phone),
+            "card_token": decrypt_value(self.card_token),
+        }
+
+
+# Payment modeli
+class Payment(models.Model):
+    user = models.ForeignKey(AbstractUser, on_delete=models.CASCADE)
+    transaction_id = models.CharField(max_length=255)
+    amount = models.IntegerField()
+    # Sensitive fields (shifrlash bilan)
+    account = encrypt(models.CharField(max_length=255))
+    store_id = encrypt(models.CharField(max_length=255))
+    terminal_id = encrypt(models.CharField(max_length=255, null=True, blank=True))
+    status = models.CharField(max_length=20, default="draft")  # draft, pre_confirmed, confirmed, canceled
+    created_at = models.DateTimeField(auto_now_add=True)

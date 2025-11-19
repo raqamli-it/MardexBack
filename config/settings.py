@@ -210,3 +210,13 @@ MYID_CLIENT_ID = os.environ.get("MYID_CLIENT_ID")
 MYID_CLIENT_SECRET = os.environ.get("MYID_CLIENT_SECRET")
 MYID_CLIENT_HASH_ID = os.getenv("MYID_CLIENT_HASH_ID")
 MYID_CLIENT_HASH = os.getenv("MYID_CLIENT_HASH")
+
+ATMOS_BASE_URL = os.environ.get("ATMOS_BASE_URL")
+ATMOS_CONSUMER_KEY = os.environ.get("ATMOS_CONSUMER_KEY")
+ATMOS_CONSUMER_SECRET = os.environ.get("ATMOS_CONSUMER_SECRET")
+ATMOS_STORE_ID = os.environ.get("ATMOS_STORE_ID")
+
+
+import base64
+
+CRYPTO_KEY = base64.urlsafe_b64encode(b'your-32-byte-secret-key-here!!!')
