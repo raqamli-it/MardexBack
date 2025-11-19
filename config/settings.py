@@ -217,6 +217,4 @@ ATMOS_CONSUMER_SECRET = os.environ.get("ATMOS_CONSUMER_SECRET")
 ATMOS_STORE_ID = os.environ.get("ATMOS_STORE_ID")
 
 
-import base64
-
-CRYPTO_KEY = base64.urlsafe_b64encode(b'your-32-byte-secret-key-here!!!')
+CRYPTO_KEY = "N2s9EF9lZ97yCvMnxlsm2tTQz6GADqSftlQe7T5zOAM="
