@@ -285,7 +285,7 @@ class BindCardInitView(generics.GenericAPIView):
         # Call ATMOS API through safe service layer
         result, code = AtmosService.send_request(
             method="POST",
-            url=f"{settings.ATMOS_BASE_URL['BASE_URL']}/partner/bind-card/init",
+            url=f"{settings.ATMOS_BASE_URL.rstrip('/')}/partner/bind-card/init",
             payload=payload
         )
 
