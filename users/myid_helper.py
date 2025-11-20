@@ -1,6 +1,6 @@
 import time
 import requests
-from django.conf import settings
+from config import settings
 
 _cached_token = None
 _token_expiry = 0

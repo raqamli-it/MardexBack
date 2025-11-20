@@ -268,7 +268,7 @@ class BindCardInitView(generics.GenericAPIView):
         # Call ATMOS API through safe service layer
         result, code = AtmosService.send_request(
             method="POST",
-            url=f"{settings.ATMOS['BASE_URL']}/partner/bind-card/init",
+            url=f"{settings.ATMOS_BASE_URL['BASE_URL']}/partner/bind-card/init",
             payload=payload
         )
 
@@ -335,7 +335,7 @@ class BindCardConfirmView(generics.GenericAPIView):
         # 2) ATMOS orqali confirm qilish
         result, code = AtmosService.send_request(
             method="POST",
-            url=f"{settings.ATMOS['BASE_URL']}/partner/bind-card/confirm",
+            url=f"{settings.ATMOS_BASE_URL['BASE_URL']}/partner/bind-card/confirm",
             payload=payload
         )
 
@@ -460,7 +460,7 @@ class BindCardDeleteView(generics.GenericAPIView):
             )
 
         # 2) ATMOS API chaqiruv (token va pan shifrlangan)
-        url = f"{settings.ATMOS['BASE_URL']}/partner/remove-card"
+        url = f"{settings.ATMOS_BASE_URL['BASE_URL']}/partner/remove-card"
         headers = AtmosAPI.make_headers()
         body = {
             "id": user_card.card_id,
@@ -511,7 +511,7 @@ class CreatePaymentTransactionView(generics.GenericAPIView):
         # 2) ATMOS API call
         try:
             response = requests.post(
-                f"{settings.ATMOS['BASE_URL']}/merchant/pay/create",
+                f"{settings.ATMOS_BASE_URL['BASE_URL']}/merchant/pay/create",
                 json=payload,
                 headers=AtmosAPI.make_headers(),
                 timeout=AtmosAPI.TIMEOUT

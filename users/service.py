@@ -2,7 +2,7 @@
 import requests
 import time
 import logging
-from django.conf import settings
+from config import settings
 from typing import Optional
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
@@ -89,7 +89,7 @@ class AtmosAPI:
             # If still nothing, attempt to fetch token ourselves (best-effort)
 
         session = cls._get_session()
-        url = f"{settings.ATMOS['BASE_URL'].rstrip('/')}/oauth/token"
+        url = f"{settings.ATMOS_BASE_URL['BASE_URL'].rstrip('/')}/oauth/token"
 
         try:
             # Use auth via client id/secret in body as currently used.
@@ -214,17 +214,17 @@ class AtmosService:
     # Specific methods
     @staticmethod
     def pre_apply(payload):
-        url = f"{settings.ATMOS['BASE_URL']}/merchant/pay/pre-apply"
+        url = f"{settings.ATMOS_BASE_URL['BASE_URL']}/merchant/pay/pre-apply"
         return AtmosService.send_request("POST", url, payload)
 
     @staticmethod
     def apply(payload):
-        url = f"{settings.ATMOS['BASE_URL']}/merchant/pay/apply"
+        url = f"{settings.ATMOS_BASE_URL['BASE_URL']}/merchant/pay/apply"
         return AtmosService.send_request("POST", url, payload)
 
     @staticmethod
     def check_status(order_id):
-        url = f"{settings.ATMOS['BASE_URL']}/merchant/pay/status/{order_id}"
+        url = f"{settings.ATMOS_BASE_URL['BASE_URL']}/merchant/pay/status/{order_id}"
         return AtmosService.send_request("GET", url)
 
     @staticmethod
@@ -234,5 +234,5 @@ class AtmosService:
 
     @staticmethod
     def cancel_transaction(payload):
-        url = f"{settings.ATMOS['BASE_URL']}/merchant/pay/reverse"
+        url = f"{settings.ATMOS_BASE_URL['BASE_URL']}/merchant/pay/reverse"
         return AtmosService.send_request("POST", url, payload)

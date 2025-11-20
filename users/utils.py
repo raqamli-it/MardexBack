@@ -1,5 +1,5 @@
 from cryptography.fernet import Fernet
-from django.conf import settings
+from config import settings
 
 # 32 byte secret base64 bilan
 fernet = Fernet(settings.CRYPTO_KEY)
