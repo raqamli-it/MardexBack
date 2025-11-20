@@ -89,23 +89,22 @@ class AtmosAPI:
             # If still nothing, attempt to fetch token ourselves (best-effort)
 
         session = cls._get_session()
-        url = f"{settings.ATMOS_BASE_URL['BASE_URL'].rstrip('/')}/oauth/token"
+        session = cls._get_session()
+        url = f"{settings.ATMOS_BASE_URL.rstrip('/')}/token"
 
         try:
-            # Use auth via client id/secret in body as currently used.
             response = session.post(
                 url,
                 data={
                     "grant_type": "client_credentials",
-                    "client_id": settings.ATMOS["CLIENT_ID"],
-                    "client_secret": settings.ATMOS["CLIENT_SECRET"],
+                    "username": settings.ATMOS_CONSUMER_KEY,
+                    "password": settings.ATMOS_CONSUMER_SECRET,
                 },
                 timeout=cls.TIMEOUT,
-                verify=True,  # ensure SSL verification
+                verify=True,
             )
         except requests.RequestException as exc:
             logger.exception("ATMOS token request failed at network level")
-            # release lock if we owned it
             if lock_acquired:
                 cls._release_lock()
             raise Exception("Failed to connect to ATMOS for token") from exc
