@@ -90,7 +90,7 @@ class AtmosAPI:
 
         session = cls._get_session()
         session = cls._get_session()
-        url = f"{settings.ATMOS_BASE_URL.rstrip('/')}/token"
+        url = f"{settings.ATMOS_BASE_URL.rstrip('/')}/token?grant_type=client_credentials"
 
         try:
             response = session.post(
