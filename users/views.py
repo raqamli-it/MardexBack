@@ -248,10 +248,16 @@ class TestAtmosTokenView(APIView):
 
     def get(self, request):
         try:
-            token = AtmosAPI.get_access_token()
-            return Response({"token": token})
+            token_info = AtmosAPI.get_access_token()  # endi dict qaytaradi
+            return Response({
+                "access_token": token_info.get("access_token"),
+                "token_type": token_info.get("token_type"),
+                "expires_in": token_info.get("expires_in"),
+                "scope": token_info.get("scope"),
+            })
         except Exception as e:
             return Response({"error": str(e)}, status=500)
+
 
 
 class CardBindThrottle(UserRateThrottle):

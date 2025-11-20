@@ -52,21 +52,29 @@ class AtmosAPI:
             logger.warning("Cache lock release failed.")
 
     @classmethod
-    def get_access_token(cls) -> str:
+    def get_access_token(cls) -> dict:
+        """
+        Return cached token info or fetch new one from ATMOS.
+        Returns dict:
+        {
+            "access_token": "...",
+            "token_type": "...",
+            "expires_in": 3600,
+            "scope": "..."
+        }
+        """
         # 1) Check cache
         token_data = cache.get(cls.TOKEN_CACHE_KEY)
         if token_data:
-            access_token = token_data.get("access_token")
-            if access_token:
-                return access_token
+            return token_data
 
         # 2) Acquire lock
         lock_acquired = cls._acquire_lock()
         if not lock_acquired:
             time.sleep(0.5)
             token_data = cache.get(cls.TOKEN_CACHE_KEY)
-            if token_data and token_data.get("access_token"):
-                return token_data["access_token"]
+            if token_data:
+                return token_data
 
         session = cls._get_session()
         url = f"{settings.ATMOS_BASE_URL.rstrip('/')}/token"
@@ -99,24 +107,32 @@ class AtmosAPI:
                 cls._release_lock()
             raise Exception("ATMOS token fetch failed")
 
-        access_token = data["access_token"]
+        # compute TTL for cache
         expires_in = data.get("expires_in") or cls.TOKEN_EXPIRES_IN_FALLBACK
         ttl = max(int(expires_in) - 5, 60)
 
+        token_info = {
+            "access_token": data["access_token"],
+            "token_type": data.get("token_type"),
+            "expires_in": expires_in,
+            "scope": data.get("scope"),
+        }
+
         try:
-            cache.set(cls.TOKEN_CACHE_KEY, {"access_token": access_token, "expires_at": int(time.time()) + ttl}, ttl)
+            cache.set(cls.TOKEN_CACHE_KEY, token_info, ttl)
         except Exception:
             logger.warning("Failed to cache token; continuing without cache.")
 
         if lock_acquired:
             cls._release_lock()
 
-        return access_token
+        return token_info
 
     @classmethod
     def make_headers(cls) -> dict:
+        token_info = cls.get_access_token()
         return {
-            "Authorization": f"Bearer {cls.get_access_token()}",
+            "Authorization": f"Bearer {token_info['access_token']}",
             "Content-Type": "application/json",
         }
 
