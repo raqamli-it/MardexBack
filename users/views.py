@@ -243,6 +243,17 @@ class MeView(APIView):
         )
 
 
+class TestAtmosTokenView(APIView):
+    permission_classes = [AllowAny]
+
+    def get(self, request):
+        try:
+            token = AtmosAPI.get_access_token()
+            return Response({"token": token})
+        except Exception as e:
+            return Response({"error": str(e)}, status=500)
+
+
 class CardBindThrottle(UserRateThrottle):
     rate = "5/min"  # User 1 daqiqada faqat 5 marta init qilishi mumkin
 

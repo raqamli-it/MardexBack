@@ -2,7 +2,7 @@ from django.urls import path
 
 from users.views import MyIDCreateSessionView, MyIDSessionStatusView, MyIDVerifyView, MyIDGetTokenView, \
     MyIDClientCredentialsView, MeView, BindCardInitView, BindCardConfirmView, BindCardListView, BindCardDeleteView, \
-    CreatePaymentTransactionView, PreApplyView
+    CreatePaymentTransactionView, PreApplyView, TestAtmosTokenView
 
 urlpatterns = [
     path("get-token/", MyIDGetTokenView.as_view(), name="myid-get-token"),
@@ -26,5 +26,8 @@ urlpatterns = [
 
     # Transactionni oldindan tasdiqlash url (pre-apply)
     path("payment/pre-confirm/", PreApplyView.as_view(), name="payment_pre_apply"),
+
+    # GET token
+    path("atmos-test-token/", TestAtmosTokenView.as_view(), name="atmos_test_token"),
 
 ]
