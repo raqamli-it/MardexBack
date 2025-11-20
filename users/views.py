@@ -22,7 +22,7 @@ from .serializer import (
     MyIDSessionStatusSerializer, BindCardInitSerializer, BindCardConfirmSerializer, BindCardDeleteSerializer,
     CreatePaymentSerializer, PreApplySerializer, ConfirmPaymentSerializer, CancelTransactionSerializer
 )
-from .service import AtmosService
+from .service import AtmosService, AtmosAPI
 
 
 # Access tokenni olish uchun (agar alohida test qilmoqchi bo‘lsangiz)
