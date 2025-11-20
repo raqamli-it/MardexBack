@@ -14,18 +14,16 @@ logger = logging.getLogger(__name__)
 # ATMOS API uchun umumiy class
 class AtmosAPI:
     TOKEN_CACHE_KEY = "atmos_access_token"
-    TOKEN_EXPIRES_IN_FALLBACK = 3500  # fallback value if provider doesn't return expires_in
-    TIMEOUT = 5  # seconds for requests
+    TOKEN_EXPIRES_IN_FALLBACK = 3500  # fallback if provider doesn't return expires_in
+    TIMEOUT = 5  # seconds for HTTP requests
     _SESSION: Optional[requests.Session] = None
     _CACHE_LOCK_KEY = "atmos_token_lock"
-    _CACHE_LOCK_TTL = 10  # seconds to avoid deadlock
+    _CACHE_LOCK_TTL = 10  # seconds
 
     @classmethod
     def _get_session(cls) -> requests.Session:
-        """Return a configured requests.Session with retry/backoff and connection pooling."""
         if cls._SESSION is None:
             session = requests.Session()
-            # Retry strategy: backoff, retry on 502/503/504 and connection errors
             retries = Retry(
                 total=3,
                 backoff_factor=0.5,
@@ -40,16 +38,10 @@ class AtmosAPI:
 
     @classmethod
     def _acquire_lock(cls) -> bool:
-        """
-        Try to acquire a simple cache-based lock.
-        Uses cache.add which is atomic in most backends (Redis/memcached).
-        Returns True if lock acquired, False otherwise.
-        """
         try:
             return cache.add(cls._CACHE_LOCK_KEY, "1", timeout=cls._CACHE_LOCK_TTL)
         except Exception:
-            # If cache backend doesn't support add/atomic, fallback to False (no lock).
-            logger.warning("Cache add failed while acquiring token lock; continuing without lock.")
+            logger.warning("Cache lock acquisition failed.")
             return False
 
     @classmethod
@@ -57,59 +49,42 @@ class AtmosAPI:
         try:
             cache.delete(cls._CACHE_LOCK_KEY)
         except Exception:
-            logger.warning("Cache delete failed for token lock.")
+            logger.warning("Cache lock release failed.")
 
     @classmethod
     def get_access_token(cls) -> str:
-        """
-        Return cached access token or fetch new one from ATMOS.
-        Implements:
-          - cache with expiry based on provider's expires_in
-          - simple cache lock to avoid race conditions
-          - retries and timeouts via requests.Session
-          - safe JSON parsing and sanitized logging
-        Raises Exception on failure.
-        """
-        # 1) Quick return if cached
+        # 1) Check cache
         token_data = cache.get(cls.TOKEN_CACHE_KEY)
         if token_data:
-            # token_data is dict {"access_token": "...", "expires_at": 1234567890}
             access_token = token_data.get("access_token")
             if access_token:
                 return access_token
 
-        # 2) Try to acquire lock; if we can't, wait a bit and re-check cache
+        # 2) Acquire lock
         lock_acquired = cls._acquire_lock()
         if not lock_acquired:
-            # Another process likely fetching token — wait short time and re-read cache
             time.sleep(0.5)
             token_data = cache.get(cls.TOKEN_CACHE_KEY)
             if token_data and token_data.get("access_token"):
                 return token_data["access_token"]
-            # If still nothing, attempt to fetch token ourselves (best-effort)
 
         session = cls._get_session()
-        session = cls._get_session()
-        url = f"{settings.ATMOS_BASE_URL.rstrip('/')}/token?grant_type=client_credentials"
+        url = f"{settings.ATMOS_BASE_URL.rstrip('/')}/token"
+
+        payload = {
+            "grant_type": "client_credentials",
+            "client_id": settings.ATMOS_CONSUMER_KEY,
+            "client_secret": settings.ATMOS_CONSUMER_SECRET,
+        }
 
         try:
-            response = session.post(
-                url,
-                data={
-                    "grant_type": "client_credentials",
-                    "username": settings.ATMOS_CONSUMER_KEY,
-                    "password": settings.ATMOS_CONSUMER_SECRET,
-                },
-                timeout=cls.TIMEOUT,
-                verify=True,
-            )
+            response = session.post(url, data=payload, timeout=cls.TIMEOUT, verify=True)
         except requests.RequestException as exc:
             logger.exception("ATMOS token request failed at network level")
             if lock_acquired:
                 cls._release_lock()
             raise Exception("Failed to connect to ATMOS for token") from exc
 
-        # parse JSON safely
         try:
             data = response.json()
         except ValueError:
@@ -118,29 +93,21 @@ class AtmosAPI:
                 cls._release_lock()
             raise Exception("Invalid response from ATMOS token endpoint")
 
-        # verify response and content
         if response.status_code != 200 or "access_token" not in data:
-            # DO NOT log secrets - log only non-sensitive fields
-            logger.error("ATMOS token fetch failed; status=%s, body_keys=%s", response.status_code, list(data.keys()) if isinstance(data, dict) else None)
+            logger.error("ATMOS token fetch failed; status=%s, body=%s", response.status_code, data)
             if lock_acquired:
                 cls._release_lock()
             raise Exception("ATMOS token fetch failed")
 
         access_token = data["access_token"]
-
-        # compute expiry: use provider's expires_in if available, fallback to class default
         expires_in = data.get("expires_in") or cls.TOKEN_EXPIRES_IN_FALLBACK
-        # set a safety margin (e.g., 5 seconds) and cache slightly less than real TTL
         ttl = max(int(expires_in) - 5, 60)
 
-        # store structured token data in cache to avoid ambiguity
         try:
             cache.set(cls.TOKEN_CACHE_KEY, {"access_token": access_token, "expires_at": int(time.time()) + ttl}, ttl)
         except Exception:
-            # if cache set fails, still release lock and return token
-            logger.warning("Failed to write token to cache; continuing without cache persistence.")
+            logger.warning("Failed to cache token; continuing without cache.")
 
-        # release lock if we acquired it
         if lock_acquired:
             cls._release_lock()
 
@@ -152,7 +119,6 @@ class AtmosAPI:
             "Authorization": f"Bearer {cls.get_access_token()}",
             "Content-Type": "application/json",
         }
-
 
 
 class AtmosService:
