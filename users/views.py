@@ -601,6 +601,7 @@ class PreApplyView(generics.GenericAPIView):
         # 2) ATMOS API call
         try:
             result, code = AtmosService.pre_apply(payload)
+            print(type(result), result)
         except requests.RequestException:
             logger.exception("ATMOS PreApply request failed for user %s", request.user.id)
             return Response({"error": "ATMOS API request failed"}, status=status.HTTP_502_BAD_GATEWAY)
