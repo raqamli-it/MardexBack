@@ -195,17 +195,17 @@ class AtmosService:
     # Specific methods
     @staticmethod
     def pre_apply(payload):
-        url = f"{settings.ATMOS_BASE_URL['BASE_URL']}/merchant/pay/pre-apply"
+        url = f"{settings.ATMOS_BASE_URL.rstrip('/')}/merchant/pay/pre-apply"
         return AtmosService.send_request("POST", url, payload)
 
     @staticmethod
     def apply(payload):
-        url = f"{settings.ATMOS_BASE_URL['BASE_URL']}/merchant/pay/apply"
+        url = f"{settings.ATMOS_BASE_URL.rstrip('/')}/merchant/pay/apply"
         return AtmosService.send_request("POST", url, payload)
 
     @staticmethod
     def check_status(order_id):
-        url = f"{settings.ATMOS_BASE_URL['BASE_URL']}/merchant/pay/status/{order_id}"
+        url = f"{settings.ATMOS_BASE_URL.rstrip('/')}/merchant/pay/status/{order_id}"
         return AtmosService.send_request("GET", url)
 
     @staticmethod
@@ -215,5 +215,5 @@ class AtmosService:
 
     @staticmethod
     def cancel_transaction(payload):
-        url = f"{settings.ATMOS_BASE_URL['BASE_URL']}/merchant/pay/reverse"
+        url = f"{settings.ATMOS_BASE_URL.rstrip('/')}/merchant/pay/reverse"
         return AtmosService.send_request("POST", url, payload)
