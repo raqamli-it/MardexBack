@@ -18,7 +18,7 @@ class MyIDSessionStatusSerializer(serializers.Serializer):
 # Card add serializer
 class BindCardInitSerializer(serializers.Serializer):
     card_number = serializers.CharField(max_length=16)
-    expiry = serializers.CharField(max_length=4)
+    expiry = serializers.CharField(max_length=5)
 
 # Card confirm kod
 class BindCardConfirmSerializer(serializers.Serializer):
