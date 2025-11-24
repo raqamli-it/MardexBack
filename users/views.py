@@ -352,19 +352,9 @@ class BindCardConfirmView(generics.GenericAPIView):
         # 2) ATMOS orqali confirm qilish
         result, code = AtmosService.send_request(
             method="POST",
-            url=f"{settings.ATMOS_BASE_URL['BASE_URL']}/partner/bind-card/confirm",
+            url=f"{settings.ATMOS_BASE_URL.rstrip('/')}/partner/bind-card/confirm",
             payload=payload
         )
-
-        # DEBUG: raw response formatini tekshiramiz
-        logger.error("ATMOS CONFIRM RAW RESPONSE: %s (type=%s)", result, type(result))
-
-        # Agar string bo'lsa — xatoni ushlab qolamiz
-        if not isinstance(result, dict):
-            return Response(
-                {"error": "ATMOS noto'g'ri formatdagi javob qaytardi", "raw": result},
-                status=500
-            )
 
         if code != 200 or result.get("result", {}).get("code") != "OK":
             logger.warning("BindCardConfirm API error for user_id=%s, tx=%s", request.user.id, transaction_id)
@@ -487,7 +477,7 @@ class BindCardDeleteView(generics.GenericAPIView):
             )
 
         # 2) ATMOS API chaqiruv (token va pan shifrlangan)
-        url = f"{settings.ATMOS_BASE_URL['BASE_URL']}/partner/remove-card"
+        url = f"{settings.ATMOS_BASE_URL.rstrip('/')}/partner/remove-card"
         headers = AtmosAPI.make_headers()
         body = {
             "id": user_card.card_id,
@@ -538,7 +528,7 @@ class CreatePaymentTransactionView(generics.GenericAPIView):
         # 2) ATMOS API call
         try:
             response = requests.post(
-                f"{settings.ATMOS_BASE_URL['BASE_URL']}/merchant/pay/create",
+                f"{settings.ATMOS_BASE_URL.rstrip('/')}/merchant/pay/create",
                 json=payload,
                 headers=AtmosAPI.make_headers(),
                 timeout=AtmosAPI.TIMEOUT
