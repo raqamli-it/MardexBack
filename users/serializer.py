@@ -75,6 +75,7 @@ class PreApplySerializer(serializers.Serializer):
     card_number = serializers.CharField(required=False, allow_blank=True)
     expiry = serializers.CharField(required=False, allow_blank=True)
     store_id = serializers.IntegerField()
+    amount = serializers.IntegerField()
     transaction_id = serializers.IntegerField()
 
     def validate(self, data):

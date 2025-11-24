@@ -2,7 +2,8 @@ from django.urls import path
 
 from users.views import MyIDCreateSessionView, MyIDSessionStatusView, MyIDVerifyView, MyIDGetTokenView, \
     MyIDClientCredentialsView, MeView, BindCardInitView, BindCardConfirmView, BindCardListView, BindCardDeleteView, \
-    CreatePaymentTransactionView, PreApplyView, TestAtmosTokenView
+    CreatePaymentTransactionView, PreApplyView, TestAtmosTokenView, ConfirmPaymentView, GetTransactionInfoView, \
+    CancelTransactionView
 
 urlpatterns = [
     path("get-token/", MyIDGetTokenView.as_view(), name="myid-get-token"),
@@ -27,7 +28,16 @@ urlpatterns = [
     # Transactionni oldindan tasdiqlash url (pre-apply)
     path("payment/pre-confirm/", PreApplyView.as_view(), name="payment_pre_apply"),
 
-    # GET token
+    # payment confirm url
+    path("payment/confirm/", ConfirmPaymentView.as_view(), name="payment_confirm"),
+
+    # Bu endpoint orqali ma’lum bir tranzaksiya haqida ma’lumot olish mumkin
+    path("payment/<int:order_id>/info/", GetTransactionInfoView.as_view(), name="payment_info"),
+
+    # Bu endpoint orqali mavjud tranzaksiyani bekor qilish mumkin
+    path("payment/cancel/", CancelTransactionView.as_view(), name="payment_cancel"),
+
+    # GET ATMOS token
     path("atmos-test-token/", TestAtmosTokenView.as_view(), name="atmos_test_token"),
 
 ]
