@@ -356,6 +356,16 @@ class BindCardConfirmView(generics.GenericAPIView):
             payload=payload
         )
 
+        # DEBUG: raw response formatini tekshiramiz
+        logger.error("ATMOS CONFIRM RAW RESPONSE: %s (type=%s)", result, type(result))
+
+        # Agar string bo'lsa — xatoni ushlab qolamiz
+        if not isinstance(result, dict):
+            return Response(
+                {"error": "ATMOS noto'g'ri formatdagi javob qaytardi", "raw": result},
+                status=500
+            )
+
         if code != 200 or result.get("result", {}).get("code") != "OK":
             logger.warning("BindCardConfirm API error for user_id=%s, tx=%s", request.user.id, transaction_id)
             return Response({"error": result}, status=status.HTTP_400_BAD_REQUEST)
