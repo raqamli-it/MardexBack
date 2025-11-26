@@ -624,14 +624,14 @@ class PreApplyView(generics.GenericAPIView):
             if not transaction_id:
                 logger.error("PreApply returned no transaction_id for user %s: %s", request.user.id, result)
             else:
-                # DB ga saqlash, sensitive maydonlarni encrypt qilib
+                # DB ga saqlash, sensitive maydonlarni encrypt qilib shifrlab saqlash
                 pre_apply_record = Payment.objects.create(
                     user=request.user,
                     transaction_id=transaction_id,
                     amount=payload.get("amount"),
-                    account=encrypt_value(payload.get("account")),  # shifrlash
-                    store_id=encrypt_value(payload.get("store_id")),  # shifrlash
-                    terminal_id=encrypt_value(payload.get("terminal_id")),  # shifrlash
+                    account=encrypt_value(payload.get("account", '')),  # account yo‘q bo‘lsa '' yuboriladi
+                    store_id=encrypt_value(payload.get("store_id")),
+                    terminal_id=encrypt_value(payload.get("terminal_id", '')),
                     status="pre_applied"
                 )
                 logger.info("PreApply transaction stored securely for user %s, tx_id=%s", request.user.id,
