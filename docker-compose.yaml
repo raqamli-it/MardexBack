@@ -5,7 +5,11 @@ services:
     build: .
     env_file:
       - .env
-    command: sh -c "python manage.py migrate && python manage.py collectstatic --noinput && daphne -b 0.0.0.0 -p 8000 config.asgi:application"
+    command: >
+      sh -c "./wait-for-it.sh mardex_db:5432 -- 
+      python manage.py migrate &&
+      python manage.py collectstatic --noinput &&
+      daphne -b 0.0.0.0 -p 8000 config.asgi:application"
     volumes:
       - .:/Mardex
       - static_volume:/Mardex/staticfiles
@@ -49,6 +53,7 @@ volumes:
   static_volume:
   media_volume:
   redis_data:
+
 
 
 
