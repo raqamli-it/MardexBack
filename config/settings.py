@@ -95,7 +95,7 @@ ASGI_APPLICATION = 'config.asgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.contrib.gis.db.backends.postgis',  # ✅ faqat shu joyi o‘zgaradi
+        'ENGINE': 'django.contrib.gis.db.backends.postgis',
         'NAME': 'mardex',
         'USER': 'user_mardex',
         'PASSWORD': 'password_mardex',
