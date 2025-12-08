@@ -22,13 +22,9 @@ schema_view = get_schema_view(
     permission_classes=(permissions.AllowAny,),
 )
 
-def home(request):
-    return HttpResponse("Mardex server is running!")
-
 urlpatterns = [
     path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
     path('redoc/', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
-    path('', home),
     path('admin/', admin.site.urls),
     path('worker/', include('worker.urls')),
     path('job/', include('job.urls')),
