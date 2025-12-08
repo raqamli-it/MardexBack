@@ -7,13 +7,13 @@ from dotenv import load_dotenv
 BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-sfxtedi$dh=#e!n=#nwmi35^(26o0(z556j5-7d+^%e#n3t6$z'
 DEBUG = True
-ALLOWED_HOSTS = ["mardex.digitallaboratory.uz", "127.0.0.1", "localhost", "95.46.96.68"]
+ALLOWED_HOSTS = ["mardex.digitallaboratory.uz", "olx.digitallaboratory.uz", "127.0.0.1", "localhost", "95.46.96.68"]
 
-SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
-
-CSRF_TRUSTED_ORIGINS = [
-    "https://mardex.digitallaboratory.uz"
-]
+# SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+#
+# CSRF_TRUSTED_ORIGINS = [
+#     "https://mardex.digitallaboratory.uz"
+# ]
 
 
 INSTALLED_APPS = [
