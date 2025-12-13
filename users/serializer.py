@@ -106,7 +106,7 @@ class PreApplySerializer(serializers.Serializer):
 
 class ConfirmPaymentSerializer(serializers.Serializer):
     transaction_id = serializers.IntegerField()
-    store_id = serializers.IntegerField()
+    # store_id = serializers.IntegerField()
     otp = serializers.CharField(required=False)  # card_token ishlatilsa ixtiyoriy
 
 class CancelTransactionSerializer(serializers.Serializer):
