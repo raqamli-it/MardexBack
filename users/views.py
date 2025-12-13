@@ -683,7 +683,11 @@ class ConfirmPaymentView(generics.GenericAPIView):
             payment = Payment.objects.select_for_update().get(transaction_id=transaction_id, user=request.user)
 
             # Status update
-            payment.status = "confirmed"
+            if payment.status == "confirmed":
+                return Response(
+                    {"error": "Payment already confirmed"},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
 
             # Agar ATMOS response’da account/store_id/terminal_id kelgan bo‘lsa, shifrlab saqlash
             if "account" in payload:
