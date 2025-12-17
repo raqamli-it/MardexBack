@@ -594,58 +594,57 @@ class PreApplyView(generics.GenericAPIView):
         serializer.is_valid(raise_exception=True)
         payload = serializer.validated_data
 
-        # 1) Basic business validation
-        if payload.get("amount", 0) <= 0:
-            return Response({"error": "Amount must be greater than zero"}, status=status.HTTP_400_BAD_REQUEST)
+        if payload["amount"] <= 0:
+            return Response(
+                {"error": "Amount must be greater than zero"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
-        # 2) ATMOS API call
+        # ATMOS PRE-APPLY
         try:
             result, code = AtmosService.pre_apply(payload)
-            print(type(result), result)
-        except requests.RequestException:
-            logger.exception("ATMOS PreApply request failed for user %s", request.user.id)
-            return Response({"error": "ATMOS API request failed"}, status=status.HTTP_502_BAD_GATEWAY)
-        except ValueError:
-            logger.exception("ATMOS PreApply JSON parse failed for user %s", request.user.id)
-            return Response({"error": "Invalid response from ATMOS API"}, status=status.HTTP_502_BAD_GATEWAY)
         except Exception as e:
-            logger.exception("PreApply failed for user %s", request.user.id)
-            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            logger.exception("ATMOS PreApply failed")
+            return Response(
+                {"error": "ATMOS PreApply failed"},
+                status=status.HTTP_502_BAD_GATEWAY
+            )
 
-        # 3) ATMOS response validation
         if code != 200 or result.get("result", {}).get("code") != "OK":
-            logger.warning("ATMOS PreApply API returned error for user %s: %s", request.user.id, result)
-            return Response({"error": result}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"error": result},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
-        # 4) Store sensitive info encrypted for audit/logging
+        # ATMOS qaytargan yoki mavjud transaction_id
+        atmos_tx_id = result.get("transaction_id") or payload["transaction_id"]
+
+        # DB UPDATE
         with transaction.atomic():
-            transaction_id = result.get("transaction_id")
-            # Agar transaction_id mavjud bo'lmasa, log qilamiz
-            if not transaction_id:
-                logger.error("PreApply returned no transaction_id for user %s: %s", request.user.id, result)
-            else:
-                # DB ga saqlash, sensitive maydonlarni encrypt qilib shifrlab saqlash
-                pre_apply_record = Payment.objects.create(
-                    user=request.user,
-                    transaction_id=transaction_id,
-                    amount=payload.get("amount"),
-                    account=encrypt_value(payload.get("account", '')),  # account yo‘q bo‘lsa '' yuboriladi
-                    store_id=encrypt_value(payload.get("store_id")),
-                    terminal_id=encrypt_value(payload.get("terminal_id", '')),
-                    status="pre_applied"
+            payment = (
+                Payment.objects
+                .select_for_update()
+                .filter(transaction_id=payload["transaction_id"], user=request.user)
+                .order_by("-id")
+                .first()
+            )
+
+            if not payment:
+                return Response(
+                    {"error": "Payment not found"},
+                    status=status.HTTP_404_NOT_FOUND
                 )
-                logger.info("PreApply transaction stored securely for user %s, tx_id=%s", request.user.id,
-                            transaction_id)
 
-        # 5) Response masking if needed
-        response_data = result.copy()
-        if "account" in payload:
-            full_account = payload.get("account")
-            masked_account = f"{'*' * (len(full_account) - 4)}{full_account[-4:]}"
-            response_data["masked_account"] = masked_account
-            response_data.pop("account", None)  # Remove raw account
+            if payment.status != "draft":
+                return Response(
+                    {"error": f"Invalid payment status: {payment.status}"},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
 
-        return Response(response_data, status=status.HTTP_200_OK)
+            payment.status = "pre_applied"
+            payment.save()
+
+        return Response(result, status=status.HTTP_200_OK)
 
 
 class ConfirmPaymentView(generics.GenericAPIView):
@@ -657,48 +656,69 @@ class ConfirmPaymentView(generics.GenericAPIView):
         serializer.is_valid(raise_exception=True)
         payload = serializer.validated_data
 
-        # Business validation
         transaction_id = payload.get("transaction_id")
         if not transaction_id:
-            return Response({"error": "transaction_id is required"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"error": "transaction_id is required"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
-        try:
-            result, code = AtmosService.confirm_payment(payload)
-        except requests.RequestException as e:
-            logger.exception("ATMOS ConfirmPayment request failed for user %s, transaction %s", request.user.id, transaction_id)
-            return Response({"error": "ATMOS API request failed"}, status=status.HTTP_502_BAD_GATEWAY)
-        except ValueError as e:  # JSON parse error
-            logger.exception("ATMOS ConfirmPayment JSON parse failed for user %s, transaction %s", request.user.id, transaction_id)
-            return Response({"error": "Invalid response from ATMOS API"}, status=status.HTTP_502_BAD_GATEWAY)
-        except Exception as e:
-            logger.exception("ConfirmPayment failed for user %s, transaction %s", request.user.id, transaction_id)
-            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-        if code != 200 or result.get("result", {}).get("code") != "OK":
-            logger.warning("ATMOS ConfirmPayment API returned error for user %s, transaction %s: %s", request.user.id, transaction_id, result)
-            return Response({"error": result}, status=status.HTTP_400_BAD_REQUEST)
-
-        # Optional: save confirmed transaction to DB
+        # DB LOCK
         with transaction.atomic():
-            payment = Payment.objects.select_for_update().get(transaction_id=transaction_id, user=request.user)
+            payment = (
+                Payment.objects
+                .select_for_update()
+                .filter(transaction_id=transaction_id, user=request.user)
+                .order_by("-id")
+                .first()
+            )
 
-            # Status update
+            if not payment:
+                return Response(
+                    {"error": "Payment not found"},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+
+            # STATUS CHECK
             if payment.status == "confirmed":
                 return Response(
                     {"error": "Payment already confirmed"},
                     status=status.HTTP_400_BAD_REQUEST
                 )
 
-            # Agar ATMOS response’da account/store_id/terminal_id kelgan bo‘lsa, shifrlab saqlash
+            if payment.status != "pre_applied":
+                return Response(
+                    {"error": f"Invalid payment state: {payment.status}"},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            # ATMOS CONFIRM
+            try:
+                result, code = AtmosService.confirm_payment(payload)
+            except Exception:
+                logger.exception("ATMOS Confirm failed")
+                return Response(
+                    {"error": "ATMOS Confirm failed"},
+                    status=status.HTTP_502_BAD_GATEWAY
+                )
+
+            if code != 200 or result.get("result", {}).get("code") != "OK":
+                return Response(
+                    {"error": result},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            # FINAL CONFIRM
+            payment.status = "confirmed"
+
             if "account" in payload:
-                payment.account = encrypt_value(payload.get("account"))
+                payment.account = encrypt_value(str(payload["account"]))
             if "store_id" in payload:
-                payment.store_id = encrypt_value(payload.get("store_id"))
+                payment.store_id = encrypt_value(str(payload["store_id"]))
             if "terminal_id" in payload:
-                payment.terminal_id = encrypt_value(payload.get("terminal_id"))
+                payment.terminal_id = encrypt_value(str(payload["terminal_id"]))
 
             payment.save()
-            logger.info("Payment confirmed and stored securely for user %s, tx=%s", request.user.id, transaction_id)
 
         return Response(result, status=status.HTTP_200_OK)
 

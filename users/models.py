@@ -135,7 +135,7 @@ class ClientProfile(models.Model):
 # Mardex userlari uchun db jadvali kartalar ulash uchun
 class UserCard(models.Model):
     user = models.ForeignKey(AbstractUser, on_delete=models.CASCADE)
-    transaction_id = models.CharField(max_length=255)
+    transaction_id = models.CharField(max_length=255, unique=True)
     status = models.CharField(max_length=30, default="pending")
 
     card_id = models.CharField(max_length=255, null=True, blank=True)
